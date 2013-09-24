@@ -1,0 +1,3 @@
+module StixPrim where
+
+amodeToStix :: AbsCSyn.CAddrMode -> Stix.StixExpr

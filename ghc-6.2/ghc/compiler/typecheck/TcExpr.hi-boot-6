@@ -1,0 +1,16 @@
+module TcExpr where
+
+tcCheckSigma :: 
+	  RnHsSyn.RenamedHsExpr
+       -> TcType.TcType
+       -> TcRnTypes.TcM TcHsSyn.TcExpr
+
+tcCheckRho :: 
+	  RnHsSyn.RenamedHsExpr
+       -> TcType.TcType
+       -> TcRnTypes.TcM TcHsSyn.TcExpr
+
+tcMonoExpr :: 
+	  RnHsSyn.RenamedHsExpr
+       -> TcUnify.Expected TcType.TcType
+       -> TcRnTypes.TcM TcHsSyn.TcExpr

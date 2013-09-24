@@ -1,0 +1,1 @@
+hugs -98 -w -P../X11:/home/reid/install/greencard-2.0/lib/hugs: TestX; stty sane

@@ -1,0 +1,42 @@
+Partial binding for the nifty cross-platform, multi language 
+Java Swing based "Japi" GUI library at:
+   http://www.japi.de/
+which requires that either "jre" or "java" to be in the path.
+
+Get the package for your platform ("libjapi.a" and "japi.h")
+then place those in your compiler searchable lib and include
+directories.  
+
+The examples directory includes a make file showing how to 
+build programs with the package.  The top level NHC98 makefile
+performs the same function for NHC98.
+
+
+NHC98
+
+Makefile.nhc98 has not yet been fully integrated with the NHC98
+build infrastructure.
+
+To build the library without the remainder of the CVS tree
+being built. eg with a standalone binary NHC98 distribution,
+just use Makefile.nhc98.standalone.
+
+Note that for Cygwin NHC98 I had to put the Java 1.4 SDK
+JRE bin at the front of the path:
+
+  export PATH=/e/lang/j2sdk1.4.0/jre/bin:${PATH}
+
+as the "java" executable which was located in the Windows 
+system directory had problems with the Cygwin/nhc98 Japi
+executables (I assume pathing problems):
+
+$ ./examples/borderpanel
+can't connect to server -> starting new kernel
+No JRE found ... trying JAVA ...
+no Java Runtime Environment found ...
+xmessage: not found
+Could not start the JAPI server (jre or java)
+
+$ which java
+/c/WINNT/system32/java
+

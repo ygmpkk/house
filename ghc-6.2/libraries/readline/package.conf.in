@@ -1,0 +1,33 @@
+#include "config.h"
+
+Package {
+	name		= "readline",
+	auto		= True,
+#ifdef INSTALLING
+	import_dirs	= [ "$libdir/imports" ],
+#else
+	import_dirs 	= [ "$libdir/libraries/readline" ],
+#endif
+	source_dirs	= [],
+#ifdef INSTALLING
+	library_dirs	= [ "$libdir" ],
+#else
+	library_dirs	= [ "$libdir/libraries/readline" ],
+#endif
+	hs_libraries	= [ "HSreadline" ],
+	extra_libraries = [
+#ifndef mingw32_TARGET_OS
+                            LibsReadline
+#endif
+			  ],
+#ifdef INSTALLING
+        include_dirs	= [],
+#else
+        include_dirs	= [ "$libdir/libraries/readline/include" ],
+#endif
+	c_includes	= [ "HsReadline.h" ],
+	package_deps	= [ "base" ],
+	extra_ghc_opts	= [],
+	extra_cc_opts	= [],
+	extra_ld_opts	= []
+}

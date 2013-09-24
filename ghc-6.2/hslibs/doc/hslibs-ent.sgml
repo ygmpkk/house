@@ -1,0 +1,83 @@
+<!-- general -->
+<!ENTITY hslibsintro     SYSTEM "hslibs-intro.sgml" >
+
+<!-- directories -->
+<!ENTITY concurrent      SYSTEM "../concurrent/doc/concurrent.sgml" >
+<!ENTITY data            SYSTEM "../data/doc/data.sgml" >
+<!ENTITY lang            SYSTEM "../lang/doc/lang.sgml">
+<!ENTITY net             SYSTEM "../net/doc/net.sgml" >
+<!ENTITY number          SYSTEM "../num/doc/num.sgml" >
+<!ENTITY posix           SYSTEM "../posix/doc/posix.sgml" >
+<!ENTITY text            SYSTEM "../text/doc/text.sgml" >
+<!ENTITY util            SYSTEM "../util/doc/util.sgml" >
+<!ENTITY win32           SYSTEM "../win32/doc/win32.sgml" >
+
+<!-- lang -->
+<!ENTITY bits            SYSTEM "../lang/doc/Bits.sgml">
+<!ENTITY cforeign        SYSTEM "../lang/doc/CForeign.sgml">
+<!ENTITY ctypes          SYSTEM "../lang/doc/CTypes.sgml">
+<!ENTITY ctypesiso       SYSTEM "../lang/doc/CTypesISO.sgml">
+<!ENTITY cstring         SYSTEM "../lang/doc/CString.sgml">
+<!ENTITY cerror          SYSTEM "../lang/doc/CError.sgml">
+<!ENTITY diffarray       SYSTEM "../lang/doc/DiffArray.sgml">
+<!ENTITY directoryexts   SYSTEM "../lang/doc/DirectoryExts.sgml">
+<!ENTITY dynamic         SYSTEM "../lang/doc/Dynamic.sgml">
+<!ENTITY exception       SYSTEM "../lang/doc/Exception.sgml">
+<!ENTITY foreign         SYSTEM "../lang/doc/Foreign.sgml">
+<!ENTITY foreignptr      SYSTEM "../lang/doc/ForeignPtr.sgml">
+<!ENTITY glaexts         SYSTEM "../lang/doc/GlaExts.sgml">
+<!ENTITY iarray          SYSTEM "../lang/doc/IArray.sgml">
+<!ENTITY int             SYSTEM "../lang/doc/Int.sgml">
+<!ENTITY ioexts          SYSTEM "../lang/doc/IOExts.sgml">
+<!ENTITY lazyst          SYSTEM "../lang/doc/LazyST.sgml">
+<!ENTITY marray          SYSTEM "../lang/doc/MArray.sgml">
+<!ENTITY marshalalloc    SYSTEM "../lang/doc/MarshalAlloc.sgml">
+<!ENTITY marshalarray    SYSTEM "../lang/doc/MarshalArray.sgml">
+<!ENTITY marshalerror    SYSTEM "../lang/doc/MarshalError.sgml">
+<!ENTITY marshalutils    SYSTEM "../lang/doc/MarshalUtils.sgml">
+<!ENTITY numexts         SYSTEM "../lang/doc/NumExts.sgml">
+<!ENTITY packed          SYSTEM "../lang/doc/PackedString.sgml">
+<!ENTITY ptr             SYSTEM "../lang/doc/Ptr.sgml">
+<!ENTITY showfunctions   SYSTEM "../lang/doc/ShowFunctions.sgml">
+<!ENTITY st              SYSTEM "../lang/doc/ST.sgml">
+<!ENTITY stablename      SYSTEM "../lang/doc/StableName.sgml">
+<!ENTITY stableptr       SYSTEM "../lang/doc/StablePtr.sgml">
+<!ENTITY storable        SYSTEM "../lang/doc/Storable.sgml">
+<!ENTITY storablearray   SYSTEM "../lang/doc/StorableArray.sgml">
+<!ENTITY systemexts      SYSTEM "../lang/doc/SystemExts.sgml">
+<!ENTITY weak            SYSTEM "../lang/doc/Weak.sgml">
+<!ENTITY word            SYSTEM "../lang/doc/Word.sgml">
+
+<!-- data -->
+<!ENTITY finitemap       SYSTEM "../data/doc/FiniteMap.sgml">
+<!ENTITY setlib          SYSTEM "../data/doc/Set.sgml">
+<!ENTITY edison          SYSTEM "../data/doc/Edison.sgml">
+
+<!-- util -->
+<!ENTITY getopt          SYSTEM "../util/doc/GetOpt.sgml">
+<!ENTITY memo            SYSTEM "../util/doc/Memo.sgml">
+<!ENTITY quickcheck      SYSTEM "../util/doc/QuickCheck.sgml">
+<!ENTITY readline        SYSTEM "../util/doc/Readline.sgml">
+<!ENTITY select          SYSTEM "../util/doc/Select.sgml">
+
+<!-- num is empty -->
+
+<!-- concurrent has just one file -->
+
+<!-- net -->
+<!ENTITY bsd             SYSTEM "../net/doc/BSD.sgml">
+<!ENTITY socket          SYSTEM "../net/doc/Socket.sgml">
+<!ENTITY socketprim      SYSTEM "../net/doc/SocketPrim.sgml">
+<!ENTITY uri             SYSTEM "../net/doc/URI.sgml">
+
+<!-- posix has just one file -->
+
+<!-- text -->
+<!ENTITY html            SYSTEM "../text/doc/Html.sgml">
+<!ENTITY matchps         SYSTEM "../text/doc/MatchPS.sgml">
+<!ENTITY parsec          SYSTEM "../text/doc/Parsec.sgml">
+<!ENTITY pretty          SYSTEM "../text/doc/Pretty.sgml">
+<!ENTITY regex           SYSTEM "../text/doc/Regex.sgml">
+<!ENTITY regexstring     SYSTEM "../text/doc/RegexString.sgml">
+        
+<!-- win32 is empty -->

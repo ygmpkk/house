@@ -1,0 +1,273 @@
+<sect1 id="release-6-2">
+  <title>Release notes for version 6.2</title>
+
+  <sect2>
+    <title>User-visible compiler changes</title>
+    <itemizedlist>
+      <listitem>
+	<para>GHC is more portable.  The main change is a <ulink
+	url="../building/sec-porting-ghc.html">detailed set of
+	instructions</ulink> in the building guide for getting an
+	unregisterised build of GHC up and running on a new
+	architecture.</para>
+      </listitem>
+
+      <listitem>
+	<para>The policy regarding which files are created where has
+	been cleaned up and documented better.  See <xref
+	linkend="separate-compilation">.</para>
+      </listitem>
+
+      <listitem>
+	<para>Some options which were previously static are now
+	dynamic.  Most notably, the optimisation options are now
+	dynamic, which means that you can use <option>-Onot</option>
+	or <option>-funbox-strict-fields</option> in an
+	<literal>OPTIONS</literal> pragma.</para>
+      </listitem>
+
+      <listitem>
+	<para>New flag: <option>-main-is</option>, allows for
+	specifying an alternative to <literal>Main.main</literal> for
+	the function to call to start the program.  See <xref
+	linkend="options-linker">.</para>
+      </listitem>
+
+      <listitem>
+	<para>New command-line option <option>-e</option> for giving
+	an expression on the command line to be evaluated.  See <xref
+	linkend="eval-mode">.</para>
+      </listitem>
+
+      <listitem>
+	<para>New command-line option <option>-fth</option> to enable
+	Template Haskell.  Template Haskell is still enabled by
+	<option>-fgasgow-exts</option> too.</para>
+      </listitem>
+
+      <listitem>
+	<para>New command-line option
+	<option>-fimplicit-params</option> to enable Implicit
+	Parameters.  Implicit Parameters are still enabled by
+	<option>-fglasgow-exts</option> too.</para>
+      </listitem>
+
+      <listitem>
+	<para>The following deprecated features have been removed:
+	<literal>_ccall_</literal>, <literal>_casm_</literal>,
+	<literal>``...''</literal> (literal-literals), the
+	<literal>CCallable</literal> and
+	<literal>CReturnable</literal> classes.  These features have
+	been obsoleted by the Foreign Function Interface for some time
+	now.</para>
+      </listitem>
+
+      <listitem>
+	<para>The deprecated keyword <literal>with</literal> has been
+	removed, along with the option <option>-fwith</option> that
+	used to enable it.</para>
+      </listitem>
+
+      <listitem>
+	<para>Constructor fields may be unpacked on an individual
+	basis using the UNPACK pragma (see <xref
+	linkend="unpack-pragma">).  Previously, the only way to unpack
+	constructor fields was to use the
+	<option>-funbox-strict-fields</option> flag which causes
+	<emphasis>all</emphasis> strict fields to be unpacked.</para>
+      </listitem>
+
+    </itemizedlist>
+  </sect2>
+  
+  <sect2>
+    <title>User-visible interpreter (GHCi) changes</title>
+    <itemizedlist>
+      <listitem>
+	<para>GHCi now uses a more liberal defaulting strategy at the
+	expression prompt.  See <xref
+	linkend="ghci-defaulting">.</para>
+      </listitem>
+    </itemizedlist>
+  </sect2>
+
+  <sect2>
+    <title>User-visible library changes</title>
+    <itemizedlist>
+      <listitem>
+	<para>The I/O library now supports large files (&gt;4Gb) if the
+	underlying OS supports them.</para>
+      </listitem>
+
+      <listitem>
+	<para>Some changes to <ulink
+	url="../libraries/haskell-src/Language.Haskell.THSyntax.html"><literal>THSyntax</literal></ulink>
+	for Template Haskell users.</para>
+      </listitem>
+
+      <listitem>
+	<para>Many changes to the <ulink
+	url="../libraries/base/Data.Generics.html"><literal>Data.Generics</literal></ulink>
+	library. The library now solidly implements the functionality described
+	in <ulink url="http://www.cs.vu.nl/boilerplate/">"Scrap your boilerplate"</ulink>, 
+	  and quite bit more besides.</para> 
+      </listitem>
+
+      <listitem>
+	<para>Added <ulink
+	url="../libraries/unix/System.Posix.Temp.html"><literal>System.posix.Temp</literal></ulink>.</para>
+      </listitem>
+
+      <listitem>
+	<para><literal>System.Sendfile</literal> is gone.</para>
+      </listitem>
+
+      <listitem>
+	<para>Updated FFI libraries to match the spec.  <ulink url="../libraries/base/Foreign.ForeignPtr.html"><literal>ForeignPtr</literal></ulink>:
+	<literal>foreignPtrToPtr</literal> is now
+	<literal>unsafeForeignPtrToPtr</literal>, and
+	<literal>newForeignPtr_</literal> has been added.</para>
+
+	<para>Also the argument order for
+	<literal>newForeignPtr</literal> and
+	<literal>addForeignPtrFinalizer</literal> have changed.</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/System.Cmd.html#rawSystem"><literal>rawSystem</literal></ulink>
+	has a new interface, and works more consistenty across
+	platforms.</para>
+      </listitem>
+
+      <listitem>
+	<para>Various libraries have more comprehensive
+	documentation.</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/System.IO.html">System.IO</ulink>:
+	added <literal>openBinaryFile</literal> and
+	<literal>hSetBinaryMode</literal>.</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/Numeric.html"><literal>Numeric</literal></ulink>:
+	<literal>showHex</literal> and <literal>showOct</literal>
+	changed behaviour to match the report (drop the leading
+	&ldquo;0x&rdquo; and &ldquo;0o&rdquo; respectively).  Also,
+	<literal>shoBin</literal> was removed.</para>
+      </listitem>
+
+      <listitem>
+	<para>Showing <ulink
+	url="../libraries/base/System.IO.html#Handle"><literal>System.IO.Handle</literal></ulink>
+	was previously an impure operation, because it displayed too
+	much of the Handle's internal state.  Now it is pure, showing
+	only the filename that the Handle is associated with (if
+	any).</para>
+	
+	<para><ulink
+	url="../libraries/base/System.IO.html#hShow"><literal>System.IO.hShow</literal></ulink> was
+	added, for converting a Handle to a String with more detail.</para>
+      </listitem>
+
+      <listitem>
+	<para><literal>parsec</literal> and
+	<literal>QuickCheck</literal> now have their own
+	packages.</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/Data.Char.html"><literal>Data.Char</literal></ulink>:
+	the character classification functions
+	(<literal>isUpper</literal>, <literal>isLower</literal>, etc.)
+	and the conversion functions (<literal>toUpper</literal>,
+	<literal>toLower</literal>) now understand the full Unicode
+	character set, at least on some platforms.  On a glibc-based
+	platform (eg. Linux), you need to set the environment variable
+	<literal>LANG</literal> to something other than
+	<literal>C</literal>.  On Windows, these functions will work
+	for Unicode characters up to <literal>0xffff</literal>.</para>
+      </listitem>
+
+      <listitem>
+	<para>The <literal>Regex</literal> and
+	<literal>MatchPS</literal> libraries in the
+	<literal>text</literal> package have been removed.  Please use
+	<literal>Text.Regex</literal> instead.</para>
+      </listitem>
+
+      <listitem>
+	<para>The <literal>MD5</literal> library in the
+	<literal>util</literal> package has been removed.  We'll
+	include a replacement in the hierarchical libraries if someone
+	would like to send us one!</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/System.IO.html"><literal>System.IO</literal></ulink>:
+	added <literal>hGetBufNonBlocking</literal> and
+	<literal>hPutBufNonBlocking</literal>.</para>
+      </listitem>
+
+      <listitem>
+	<para><ulink
+	url="../libraries/base/Data.FiniteMap.html"><literal>Data.FiniteMap</literal></ulink>:
+	added <literal>foldFM_GE</literal>,
+	<literal>fmToList_GE</literal>, <literal>keysFM_GE</literal>,
+	<literal>eltsFM_GE</literal>.</para>
+      </listitem>
+    </itemizedlist>
+  </sect2>
+
+  <sect2>
+    <title>Experimental features</title>
+    <itemizedlist>
+      <listitem>
+	<para>Initial support for interop'ing with .NET via FFI
+	declarations.</para>
+      </listitem>
+
+      <listitem>
+	<para>Initial support for arrows syntax.  See <xref
+	linkend="arrow-notation">.</para>
+      </listitem>
+
+      <listitem>
+	<para>Initial support for the x86-64 (or amd64) platform.</para>
+      </listitem>
+    </itemizedlist>
+  </sect2>
+
+  <sect2>
+    <title>Internal changes</title>
+    <itemizedlist>
+      <listitem>
+	<para><literal>autoreconf</literal> is now required instead of
+	<literal>autoconf</literal> to generate GHC's
+	<literal>configure</literal> script.  The configure setup has
+	seen a great deal of cleanup thanks to work by Sven
+	Panne.</para>
+      </listitem>
+      <listitem>
+	<para><ulink url="http://www.haskell.org/alex/">Alex</ulink>
+	is now required to build GHC.  GHC's old handwritten lexer has
+	been replaced by one generated from an Alex
+	specification.</para>
+      </listitem>
+    </itemizedlist>
+  </sect2>
+
+</sect1>
+
+<!-- Emacs stuff:
+     ;;; Local Variables: ***
+     ;;; mode: sgml ***
+     ;;; sgml-parent-document: ("users_guide.sgml" "book" "chapter" "sect1") ***
+     ;;; End: ***
+ -->

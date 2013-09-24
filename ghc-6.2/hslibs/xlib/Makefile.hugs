@@ -1,0 +1,116 @@
+##############################################################################
+# Makefile for Xlib with Hugs on Unix
+# 
+# This makefile is for GNU Make ver. 3.76 or later.
+##############################################################################
+
+# This goes first to make it the default
+default: all
+
+################################################################
+# Configuration parameters.  These may need slight modification.
+# 
+# Rather than edit this file, you can override the settings when you
+# invoke Make.  For example:
+#
+#   make system=SunOS X_dir=/usr/local/X11R6
+#
+################################################################
+
+# Which directory contains lib/libX11.a and include/X11/X.h?
+X_dir=/usr/X11R6
+
+# Should we rerun GreenCard if GreenCard generated files are out of date?
+# (This will usually be set to "no" in distributions and "yes" in 
+# development copies.)
+rerun_GC=no
+
+################################################################
+# Tools and how to run them.  Nothing below this line should
+# need modified.
+################################################################
+
+SHELL = /bin/sh
+RM = rm -f
+
+INCLUDES = -I$(X_dir)/include
+LDFLAGS	+= -L$(X_dir)/lib -lX11
+
+FFIHUGS = ffihugs
+GC      = greencard
+GC_OPTS = --target=hugs
+
+################################################################
+# Implicit rules for GreenCard and shared objects
+################################################################
+
+ifeq ($(rerun_GC),yes)
+%_stub_ffi.c %_stub_ffi.h %.hs: %.gc
+	$(GC) $(GC_OPTS) $<
+endif
+
+Xlib_StdDIS.so: Xlib_StdDIS.hs Xlib_StdDIS_stub_ffi.c
+	$(FFIHUGS) +G +L"\"Xlib_StdDIS_stub_ffi.c\"" $<
+
+X.so: X.hs X_stub_ffi.c
+	$(FFIHUGS) +G +L"\"$(INCLUDES) X_stub_ffi.c $(LDFLAGS)\"" $<
+
+Xlib.so: Xlib.hs Xlib_stub_ffi.c cbits/auxiliaries.c
+	$(FFIHUGS) +G +L"\"$(INCLUDES) Xlib_stub_ffi.c cbits/auxiliaries.c $(LDFLAGS)\"" $<
+
+# Additional dependences.
+X.so         : Xlib_StdDIS.so
+Xlib.so      : X.so Xlib_StdDIS.so
+Xlib.so X.so : cbits/HsXlib.h
+
+
+################################################################
+# Source and object files
+################################################################
+
+gc_sources = $(wildcard *.gc)
+c_sources  = $(wildcard cbits/*.c)
+
+hs_gen_sources = $(gc_sources:.gc=.hs)
+
+all_hs_sources = $(hs_sources) $(hs_gen_sources)
+
+c_gen_sources = $(gc_sources:.gc=.c) $(gc_sources:.gc=_stub_ffi.c)
+
+all_c_sources = $(c_sources) $(c_gen_sources)
+
+all_c_objects = $(all_c_sources:.c=.o)
+
+shared_objects = $(gc_sources:.gc=.so)
+
+################################################################
+# Main targets
+################################################################
+
+.PHONY: all
+
+all: $(hs_gen_sources) $(shared_objects)
+
+ifeq ($(rerun_GC),yes)
+clean::
+	$(RM) $(hs_gen_sources)
+	$(RM) $(c_gen_sources)
+endif
+
+clean::
+	$(RM) $(all_c_objects)
+	$(RM) $(shared_objects)
+
+################################################################
+# Auxiliary targets
+################################################################
+
+.PRECIOUS: $(hs_gen_sources) $(shared_objects)
+
+# Additional dependences.
+Xlib.so X.so : cbits/HsXlib.h
+
+################################################################
+# End
+################################################################
+

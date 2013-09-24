@@ -1,0 +1,2444 @@
+diff -urN ghc-6.2.orig/configure.ac ghc-6.2/configure.ac
+--- ghc-6.2.orig/configure.ac	2003-11-20 11:09:33.000000000 +0100
++++ ghc-6.2/configure.ac	2004-02-27 15:33:05.000000000 +0100
+@@ -575,6 +575,17 @@
+ )
+ AC_SUBST(ThreadedRts)
+ 
++dnl ** Enable system-independent RTS?
++dnl --------------------------------------------------------------
++AC_ARG_ENABLE(standalone-rts,
++[  --enable-standalone-rts
++        Generate system-independent RTS.
++],
++[StandaloneRts=YES],
++[StandaloneRts=NO]
++)
++AC_SUBST(StandaloneRts)
++
+ dnl ** Enable the construction of Win32 DLLs?
+ dnl --------------------------------------------------------------
+ dnl
+@@ -838,6 +849,8 @@
+ dnl ### program checking section ends here ###
+ dnl --------------------------------------------------
+ 
++if test "StandaloneRts" = "NO"; then
++
+ dnl --------------------------------------------------
+ dnl * Platform header file and syscall feature tests
+ dnl ### checking the state of the local header files and syscalls ###
+@@ -1189,6 +1202,13 @@
+   AC_DEFINE([HAVE_READLINE_4_2], [0], [Define to 1 if readline has version >= 4.2.])
+ fi
+ 
++dnl ** check for wide-char classifications
++dnl FreeBSD has an emtpy wctype.h, so test one of the affected
++dnl functions if it's really there.
++AC_CHECK_HEADERS(wctype.h,
++  [AC_CHECK_FUNCS(iswspace)]
++)
++
+ dnl ** check for math library
+ FPTOOLS_CHECK_LIBM()
+ AC_SUBST(LIBM)
+@@ -1437,4 +1457,129 @@
+ AC_DEFINE([HAVE_SC_GETPW_R_SIZE_MAX], [1], [Define to 1 if <unistd.h> defines _SC_GETPW_R_SIZE_MAX.])],
+ [AC_MSG_RESULT([no])])
+ 
++else
++dnl Standalone RTS has pretty much everything hardwired.
++
++dnl ** does #! work?
++AC_SYS_INTERPRETER()
++
++dnl ** look for `perl', but only in /bin on Windows
++case $HostOS_CPP in
++cygwin32|mingw32)
++      AC_CHECK_PROG(PerlCmd,perl,/bin/perl,,/bin)
++      if test -z "$PerlCmd"; then
++         echo "You must install the version of Perl shipped with GHC"
++         echo "(or a compatible one) in /bin."
++         exit 1
++      fi
++   ;;
++*)
++   AC_PATH_PROG(PerlCmd,perl)
++   if test -z "$PerlCmd"; then
++      echo "You must install perl before you can continue"
++      echo "Perhaps it is already installed, but not in your PATH?"
++      exit 1
++   else
++   FPTOOLS_CHECK_PERL_VERSION
++   fi
++   ;;
++esac
++
++AC_DEFINE([STANDALONE], [1], [Define to 1 for standalone RTS.])
++
++dnl ** check for math library
++FPTOOLS_CHECK_LIBM()
++AC_SUBST(LIBM)
++
++dnl ** check whether this machine has gmp3 installed
++AC_CHECK_LIB(gmp,  __gmpz_fdiv_qr, HaveLibGmp=YES; LibGmp=gmp,
++  AC_CHECK_LIB(gmp3, __gmpz_fdiv_qr,  HaveLibGmp=YES; LibGmp=gmp3,
++    HaveLibGmp=NO; LibGmp=not-installed))
++AC_SUBST(HaveLibGmp)
++AC_SUBST(LibGmp)
++
++dnl ** do we have long longs?
++AC_CHECK_TYPES([long long])
++
++dnl ** what are the sizes of various types
++AC_CHECK_SIZEOF(char,               1)
++AC_CHECK_SIZEOF(double,             8)
++AC_CHECK_SIZEOF(float,              4)
++AC_CHECK_SIZEOF(int,                4)
++AC_CHECK_SIZEOF(long,               4)
++if test "$ac_cv_type_long_long" = yes; then
++AC_CHECK_SIZEOF(long long,          8)
++fi
++AC_CHECK_SIZEOF(short,              2)
++AC_CHECK_SIZEOF(unsigned char,      1)
++AC_CHECK_SIZEOF(unsigned int,       4)
++AC_CHECK_SIZEOF(unsigned long,      4)
++if test "$ac_cv_type_long_long" = yes; then
++AC_CHECK_SIZEOF(unsigned long long, 8)
++fi
++AC_CHECK_SIZEOF(unsigned short,     2)
++AC_CHECK_SIZEOF(void *,             4)
++
++dnl ** what are alignment constraints on various types
++FP_CHECK_ALIGNMENT(char)
++FP_CHECK_ALIGNMENT(double)
++FP_CHECK_ALIGNMENT(float)
++FP_CHECK_ALIGNMENT(int)
++FP_CHECK_ALIGNMENT(long)
++if test "$ac_cv_type_long_long" = yes; then
++FP_CHECK_ALIGNMENT(long long)
++fi
++FP_CHECK_ALIGNMENT(short)
++FP_CHECK_ALIGNMENT(unsigned char)
++FP_CHECK_ALIGNMENT(unsigned int)
++FP_CHECK_ALIGNMENT(unsigned long)
++if test "$ac_cv_type_long_long" = yes; then
++FP_CHECK_ALIGNMENT(unsigned long long)
++fi
++FP_CHECK_ALIGNMENT(unsigned short)
++FP_CHECK_ALIGNMENT(void *)
++
++dnl ** map standard C types and ISO types to Haskell types
++FPTOOLS_CHECK_HTYPE(char)
++FPTOOLS_CHECK_HTYPE(signed char)
++FPTOOLS_CHECK_HTYPE(unsigned char)
++FPTOOLS_CHECK_HTYPE(short)
++FPTOOLS_CHECK_HTYPE(unsigned short)
++FPTOOLS_CHECK_HTYPE(int)
++FPTOOLS_CHECK_HTYPE(unsigned int)
++FPTOOLS_CHECK_HTYPE(long)
++FPTOOLS_CHECK_HTYPE(unsigned long)
++if test "$ac_cv_type_long_long" = yes; then
++FPTOOLS_CHECK_HTYPE(long long)
++FPTOOLS_CHECK_HTYPE(unsigned long long)
++fi
++FPTOOLS_CHECK_HTYPE(float)
++FPTOOLS_CHECK_HTYPE(double)
++FPTOOLS_CHECK_HTYPE(ptrdiff_t)
++FPTOOLS_CHECK_HTYPE(size_t)
++FPTOOLS_CHECK_HTYPE(wchar_t)
++
++dnl ** determine whether or not const works
++AC_C_CONST
++
++dnl ** are we big endian?
++AC_C_BIGENDIAN
++
++dnl ** check for leading underscores in symbol names
++FPTOOLS_UNDERSCORE
++
++dnl ** check for ld, and whether ld has -x option
++AC_PATH_PROG(LdCmdRaw, ld)
++LdCmd=${LdCmdRaw}
++AC_SUBST(LdCmd)
++FPTOOLS_LD_X
++
++dnl ** check for more functions
++AC_CHECK_FUNCS(strcasecmp _stricmp stricmp strcmpi)
++AC_CHECK_FUNCS(strcmp)
++AC_CHECK_FUNCS(vsnprintf _vsnprintf)
++AC_CHECK_FUNCS(snprintf  _snprintf )  
++
++fi
++
+ AC_OUTPUT(mk/config.mk, echo timestamp > mk/stamp-h )
+diff -urN ghc-6.2.orig/ghc/compiler/Makefile ghc-6.2/ghc/compiler/Makefile
+--- ghc-6.2.orig/ghc/compiler/Makefile	2003-09-08 13:52:24.000000000 +0200
++++ ghc-6.2/ghc/compiler/Makefile	2004-03-05 15:36:44.000000000 +0100
+@@ -274,12 +274,14 @@
+ ifeq "$(GhcWithInterpreter) $(bootstrapped)" "YES YES"
+ # Yes, include the interepreter, readline, and Template Haskell extensions
+ SRC_HC_OPTS += -DGHCI -package haskell-src
++ifneq "$(STANDALONE)" ""
+ ifneq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
+ SRC_HC_OPTS += -package unix
+ ifeq "$(GhcLibsWithReadline)" "YES"
+ SRC_HC_OPTS += -package readline 
+ endif
+ endif
++endif
+ ALL_DIRS += ghci
+ else
+ # No interpreter, so exclude Template Haskell modules
+diff -urN ghc-6.2.orig/ghc/compiler/prelude/primops.txt.pp ghc-6.2/ghc/compiler/prelude/primops.txt.pp
+--- ghc-6.2.orig/ghc/compiler/prelude/primops.txt.pp	2003-11-10 13:07:25.000000000 +0100
++++ ghc-6.2/ghc/compiler/prelude/primops.txt.pp	2004-05-21 17:21:58.000000000 +0200
+@@ -1685,6 +1685,36 @@
+ 
+ ------------------------------------------------------------------------
+ 
++------------------------------------------------------------------------
++section "hOp"
++------------------------------------------------------------------------
++#ifdef STANDALONE
++
++primop	InbOp	"inb#"	GenPrimOp
++   Word# -> State# RealWorld -> (# State# RealWorld, Word# #)
++   with
++   has_side_effects = True
++   out_of_line = True     
++
++primop	OutbOp	"outb#"	GenPrimOp
++   Word# -> Word# -> State# RealWorld -> State# RealWorld
++   with
++   has_side_effects = True
++   out_of_line = True
++
++primop	RegisterForIRQ	"registerForIRQ#"	GenPrimOp
++   Word# -> State# RealWorld -> State# RealWorld
++   with
++   has_side_effects = True
++   out_of_line = True
++
++primop	WaitNextInterrupt	"waitNextInterrupt#"	GenPrimOp
++   Word# -> State# RealWorld -> State# RealWorld
++   with
++   has_side_effects = True
++   out_of_line = True
++
++#endif
+ 
+ ------------------------------------------------------------------------
+ ---                                                                  ---
+diff -urN ghc-6.2.orig/ghc/includes/PrimOps.h ghc-6.2/ghc/includes/PrimOps.h
+--- ghc-6.2.orig/ghc/includes/PrimOps.h	2003-11-10 13:07:34.000000000 +0100
++++ ghc-6.2/ghc/includes/PrimOps.h	2004-05-21 17:23:49.000000000 +0200
+@@ -315,6 +315,19 @@
+ #endif
+ 
+ /* -----------------------------------------------------------------------------
++   hOp
++   -------------------------------------------------------------------------- */
++
++#ifdef STANDALONE
++
++EXTFUN_RTS(inbzh_fast);
++EXTFUN_RTS(outbzh_fast);
++EXTFUN_RTS(registerForIRQzh_fast);
++EXTFUN_RTS(waitNextInterruptzh_fast);
++
++#endif
++
++/* -----------------------------------------------------------------------------
+    BCOs and BCO linkery
+    -------------------------------------------------------------------------- */
+ 
+diff -urN ghc-6.2.orig/ghc/includes/TSO.h ghc-6.2/ghc/includes/TSO.h
+--- ghc-6.2.orig/ghc/includes/TSO.h	2003-11-10 13:01:51.000000000 +0100
++++ ghc-6.2/ghc/includes/TSO.h	2004-05-21 18:45:15.000000000 +0200
+@@ -139,6 +139,9 @@
+   BlockedOnRead,
+   BlockedOnWrite,
+   BlockedOnDelay
++#ifdef STANDALONE
++  , BlockedWaitingInterrupts
++#endif
+ #if defined(mingw32_TARGET_OS)
+   , BlockedOnDoProc
+ #endif
+@@ -194,7 +197,9 @@
+   StgTSOBlockInfo    block_info;
+   struct StgTSO_*    blocked_exceptions;
+   StgThreadID        id;
++#ifndef STANDALONE
+   int                saved_errno;
++#endif
+   
+   StgTSOTickyInfo    ticky; 
+   StgTSOProfInfo     prof;
+diff -urN ghc-6.2.orig/ghc/rts/Interpreter.c ghc-6.2/ghc/rts/Interpreter.c
+--- ghc-6.2.orig/ghc/rts/Interpreter.c	2003-12-16 17:58:25.000000000 +0100
++++ ghc-6.2/ghc/rts/Interpreter.c	2004-03-06 12:37:10.000000000 +0100
+@@ -1177,8 +1177,10 @@
+ 	    memcpy(arguments, Sp, sizeof(W_) * stk_offset);
+ #endif
+ 
++#ifndef STANDALONE
+ 	    // Restore the Haskell thread's current value of errno
+ 	    errno = cap->r.rCurrentTSO->saved_errno;
++#endif
+ 
+ 	    // There are a bunch of non-ptr words on the stack (the
+ 	    // ccall args, the ccall fun address and space for the
+@@ -1216,8 +1218,10 @@
+ 	    LOAD_STACK_POINTERS;
+ 	    Sp += ret_dyn_size;
+ 	    
++#ifndef STANDALONE
+ 	    // Save the Haskell thread's current value of errno
+ 	    cap->r.rCurrentTSO->saved_errno = errno;
++#endif
+ 		
+ #ifdef RTS_SUPPORTS_THREADS
+ 	    // Threaded RTS:
+diff -urN ghc-6.2.orig/ghc/rts/Itimer.c ghc-6.2/ghc/rts/Itimer.c
+--- ghc-6.2.orig/ghc/rts/Itimer.c	2003-12-16 17:58:25.000000000 +0100
++++ ghc-6.2/ghc/rts/Itimer.c	2004-02-27 15:33:05.000000000 +0100
+@@ -7,6 +7,8 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
++#ifndef STANDALONE
++
+ /*
+  * The interval timer is used for profiling and for context switching in the
+  * threaded build.  Though POSIX 1003.1b includes a standard interface for
+@@ -172,3 +174,5 @@
+ 	  tv.tv_usec * TICK_FREQUENCY / 1000000);
+ }
+ 
++#endif /* ! STANDALONE */
++
+diff -urN ghc-6.2.orig/ghc/rts/LdvProfile.c ghc-6.2/ghc/rts/LdvProfile.c
+--- ghc-6.2.orig/ghc/rts/LdvProfile.c	2003-12-16 17:58:25.000000000 +0100
++++ ghc-6.2/ghc/rts/LdvProfile.c	2004-03-06 12:28:40.000000000 +0100
+@@ -8,7 +8,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#ifdef PROFILING
++#if !defined(STANDALONE) && defined(PROFILING)
+ 
+ #include "Stg.h"
+ #include "Rts.h"
+@@ -405,4 +405,4 @@
+     LdvCensusForDead(RtsFlags.GcFlags.generations - 1);
+ }
+ 
+-#endif /* PROFILING */
++#endif /* !STANDALONE && PROFILING */
+diff -urN ghc-6.2.orig/ghc/rts/Linker.c ghc-6.2/ghc/rts/Linker.c
+--- ghc-6.2.orig/ghc/rts/Linker.c	2003-12-16 17:58:26.000000000 +0100
++++ ghc-6.2/ghc/rts/Linker.c	2004-05-21 18:46:12.000000000 +0200
+@@ -6,6 +6,7 @@
+  * RTS Object Linker
+  *
+  * ---------------------------------------------------------------------------*/
++#ifndef STANDALONE
+ 
+ #if 0
+ #include "PosixSource.h"
+@@ -3579,3 +3580,5 @@
+ 
+ }
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/ghc/rts/MBlock.c ghc-6.2/ghc/rts/MBlock.c
+--- ghc-6.2.orig/ghc/rts/MBlock.c	2003-12-16 17:58:26.000000000 +0100
++++ ghc-6.2/ghc/rts/MBlock.c	2004-02-27 15:33:05.000000000 +0100
+@@ -61,6 +61,38 @@
+    Allocate new mblock(s)
+    -------------------------------------------------------------------------- */
+ 
++#ifdef STANDALONE
++
++static void* next_mblock;
++static void* end_of_memory;
++
++void MBlock_init(void * heap, void * limit) {
++  memset(mblock_map, 0, MBLOCK_MAP_SIZE);
++  next_mblock = (void*)(((StgWord32)heap + MBLOCK_SIZE - 1) & ~(MBLOCK_SIZE - 1));
++  end_of_memory = limit;
++}
++
++void *
++getMBlocks(unsigned n) {
++  void * p = next_mblock;
++  unsigned i = 0;
++  next_mblock += MBLOCK_SIZE * n;
++  if (next_mblock > end_of_memory)
++    perror("Haskell heap exhausted\n");
++  mblocks_allocated += n;
++  for (i = 0; i < n; i++) {
++      MARK_HEAP_ALLOCED( p + i * MBLOCK_SIZE );
++  }
++  return p;
++}
++
++void *
++getMBlock(void) {
++  return getMBlocks(1);
++}
++
++#else /* !STANDALONE */
++
+ void *
+ getMBlock(void)
+ {
+@@ -364,3 +396,5 @@
+ #endif
+ 
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/ghc/rts/OSThreads.h ghc-6.2/ghc/rts/OSThreads.h
+--- ghc-6.2.orig/ghc/rts/OSThreads.h	2003-12-16 17:58:27.000000000 +0100
++++ ghc-6.2/ghc/rts/OSThreads.h	2004-03-12 12:23:28.000000000 +0100
+@@ -72,6 +72,11 @@
+ extern void yieldThread           ( void );
+ extern int  createOSThread        ( OSThreadId* tid,
+ 				    void (*startProc)(void) );
++#elif STANDALONE
++
++#define ACQUIRE_LOCK(l)	__asm__("cli")
++#define RELEASE_LOCK(l)	__asm__("sti")
++
+ #else
+ 
+ #define ACQUIRE_LOCK(l)
+diff -urN ghc-6.2.orig/ghc/rts/PrimOps.hc ghc-6.2/ghc/rts/PrimOps.hc
+--- ghc-6.2.orig/ghc/rts/PrimOps.hc	2003-12-16 17:58:27.000000000 +0100
++++ ghc-6.2/ghc/rts/PrimOps.hc	2004-05-21 17:26:55.000000000 +0200
+@@ -1747,3 +1747,75 @@
+ }
+ #endif
+ 
++/* -----------------------------------------------------------------------------
++   hOp
++   -------------------------------------------------------------------------- */
++
++#ifdef STANDALONE
++
++#define inb(dx) ({StgWord8 r; __asm__ __volatile__("inb %%dx, %%al":"=a"(r):"d"(dx)); r;})
++
++#define outb(dx,al) {StgWord8 r; __asm__ __volatile__("outb %%al, %%dx;jmp 1f;1:"::"a"(al),"d"(dx));} while (0)
++
++FN_(inbzh_fast)
++{
++  /* args: R1 = IO port to read */
++  W_ port, data;
++  FB_
++    port = R1.w;
++    data = inb(port);
++    /* returns (# s#, Word# #) */
++    TICK_RET_UNBOXED_TUP(1);
++    RET_P(data);
++  FE_
++}
++
++FN_(outbzh_fast)
++{
++  /* args: R1 = IO port to write, R2 = data */
++  W_ port, data;
++  FB_
++    port = R1.w;
++    data = R2.w;
++    outb(port, data);
++    JMP_(ENTRY_CODE(Sp[0]));
++  FE_
++}
++
++FN_(registerForIRQzh_fast)
++{
++  StgStablePtr sp;
++
++  /* args: R1 = irq number */
++  FB_
++    sp = RET_STGCALL1(StgStablePtr,getStablePtr,CurrentTSO);
++    irqHandlerThreads[R1.w] = sp;
++    ASSERT(CurrentTSO->why_blocked == NotBlocked);
++    CurrentTSO->why_blocked = BlockedWaitingInterrupts;
++    /* Enable IRQ */
++    if (R1.w < 8) {
++      outb(0x21, inb(0x21) & ~(R1.w + 1));
++    } else {
++      outb(0xA1, inb(0xA1) & ~(R1.w - 7));
++    }
++    JMP_(stg_block_noregs);
++  FE_
++}
++
++FN_(waitNextInterruptzh_fast)
++{
++  /* args: R1 = irq number */
++  FB_
++    ASSERT(CurrentTSO->why_blocked == NotBlocked);
++    CurrentTSO->why_blocked = BlockedWaitingInterrupts;
++    /* EOI */
++    if (R1.w < 8) {
++      outb(0x20, 0x60 | R1.w);
++    } else {
++      outb(0xA0, 0x60 | (R1.w - 8));
++    }
++    JMP_(stg_block_noregs);
++  FE_
++}
++
++#endif /* STANDALONE */
+\ No newline at end of file
+diff -urN ghc-6.2.orig/ghc/rts/ProfHeap.c ghc-6.2/ghc/rts/ProfHeap.c
+--- ghc-6.2.orig/ghc/rts/ProfHeap.c	2003-12-16 17:58:28.000000000 +0100
++++ ghc-6.2/ghc/rts/ProfHeap.c	2004-03-06 12:46:35.000000000 +0100
+@@ -7,13 +7,13 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#if defined(DEBUG) && !defined(PROFILING)
++#if defined(DEBUG) && !defined(PROFILING) && !defined(STANDALONE)
+ #define DEBUG_HEAP_PROF
+ #else
+ #undef DEBUG_HEAP_PROF
+ #endif
+ 
+-#if defined(PROFILING) || defined(DEBUG_HEAP_PROF)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG_HEAP_PROF))
+ 
+ #include "PosixSource.h"
+ #include "Rts.h"
+@@ -1089,5 +1089,5 @@
+ #endif
+ }    
+ 
+-#endif /* PROFILING || DEBUG_HEAP_PROF */
++#endif /* !STANDALONE && (PROFILING || DEBUG_HEAP_PROF) */
+ 
+diff -urN ghc-6.2.orig/ghc/rts/Profiling.c ghc-6.2/ghc/rts/Profiling.c
+--- ghc-6.2.orig/ghc/rts/Profiling.c	2003-12-16 17:58:28.000000000 +0100
++++ ghc-6.2/ghc/rts/Profiling.c	2004-03-06 12:24:58.000000000 +0100
+@@ -7,7 +7,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#ifdef PROFILING
++#if !defined(STANDALONE) && defined(PROFILING)
+ 
+ #include "PosixSource.h"
+ #include "Rts.h"
+@@ -918,4 +918,4 @@
+   fprintf(f,">");
+ }
+ 
+-#endif /* PROFILING */
++#endif /* !STANDALONE && PROFILING */
+diff -urN ghc-6.2.orig/ghc/rts/Profiling.h ghc-6.2/ghc/rts/Profiling.h
+--- ghc-6.2.orig/ghc/rts/Profiling.h	2003-12-16 17:58:28.000000000 +0100
++++ ghc-6.2/ghc/rts/Profiling.h	2004-03-06 12:35:35.000000000 +0100
+@@ -7,7 +7,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#if defined(PROFILING) || defined(DEBUG)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG))
+ void initProfiling1 ( void );
+ void initProfiling2 ( void );
+ void endProfiling   ( void );
+diff -urN ghc-6.2.orig/ghc/rts/Proftimer.c ghc-6.2/ghc/rts/Proftimer.c
+--- ghc-6.2.orig/ghc/rts/Proftimer.c	2003-12-16 17:58:28.000000000 +0100
++++ ghc-6.2/ghc/rts/Proftimer.c	2004-03-06 12:26:37.000000000 +0100
+@@ -7,7 +7,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#if defined (PROFILING)
++#if defined(PROFILING) && !defined(STANDALONE)
+ 
+ #include "PosixSource.h"
+ 
+@@ -85,4 +85,4 @@
+     }
+ }
+ 
+-#endif /* PROFILING */
++#endif /* !STANDALONE && PROFILING */
+diff -urN ghc-6.2.orig/ghc/rts/RetainerProfile.c ghc-6.2/ghc/rts/RetainerProfile.c
+--- ghc-6.2.orig/ghc/rts/RetainerProfile.c	2003-12-16 17:58:29.000000000 +0100
++++ ghc-6.2/ghc/rts/RetainerProfile.c	2004-03-06 12:25:54.000000000 +0100
+@@ -8,7 +8,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#ifdef PROFILING
++#if defined(PROFILING) && !defined(STANDALONE)
+ 
+ // Turn off inlining when debugging - it obfuscates things
+ #ifdef DEBUG
+@@ -2382,4 +2382,4 @@
+ }
+ #endif // DEBUG_RETAINER
+ 
+-#endif /* PROFILING */
++#endif /* !STANDALNONE && PROFILING */
+diff -urN ghc-6.2.orig/ghc/rts/RetainerSet.c ghc-6.2/ghc/rts/RetainerSet.c
+--- ghc-6.2.orig/ghc/rts/RetainerSet.c	2003-12-16 17:58:29.000000000 +0100
++++ ghc-6.2/ghc/rts/RetainerSet.c	2004-03-06 12:27:08.000000000 +0100
+@@ -8,7 +8,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#ifdef PROFILING
++#if !defined(STANDALONE) && defined(PROFILING)
+ 
+ #include <stdlib.h>
+ 
+@@ -497,4 +497,4 @@
+ }
+ #endif // SECOND_APPROACH
+ 
+-#endif /* PROFILING */
++#endif /* !STANDALONE && PROFILING */
+diff -urN ghc-6.2.orig/ghc/rts/RtsFlags.c ghc-6.2/ghc/rts/RtsFlags.c
+--- ghc-6.2.orig/ghc/rts/RtsFlags.c	2003-12-16 17:58:30.000000000 +0100
++++ ghc-6.2/ghc/rts/RtsFlags.c	2004-05-21 18:47:12.000000000 +0200
+@@ -7,7 +7,6 @@
+  * Functions for parsing the argument list.
+  *
+  * ---------------------------------------------------------------------------*/
+-
+ //@menu
+ //* Includes::			
+ //* Constants::			
+@@ -107,6 +106,8 @@
+ 
+ #endif /* PAR */
+ 
++#if !defined(STANDALONE) || defined(DEBUG)
++
+ //@node Static function decls, Command-line option parsing routines, Constants
+ //@subsection Static function decls
+ 
+@@ -135,6 +136,8 @@
+ static void help_par_debug_options(nat n);
+ #endif
+ 
++#endif /* !STANDALONE || DEBUG /*
++
+ //@node Command-line option parsing routines, GranSim specific options, Static function decls
+ //@subsection Command-line option parsing routines
+ 
+@@ -317,6 +320,19 @@
+ #endif
+ }
+ 
++#ifdef DEBUG
++
++# ifdef STANDALONE
++
++/* These functions are available in support libraries. */
++
++extern int iswblank(wint_t wc);
++extern double atof_hop(const char *nptr);
++#  define isspace(X) iswblank(X)
++#  define atof atof_hop
++
++# endif
++
+ static const char *
+ usage_text[] = {
+ "",
+@@ -574,6 +590,7 @@
+ 
+     // Process RTS (rts_argv) part: mainly to determine statsfile
+     for (arg = 0; arg < *rts_argc; arg++) {
++      fprintf(stderr, "\nrts_arg: %s\n", rts_argv[arg]);
+ 	if (rts_argv[arg][0] != '-') {
+ 	    fflush(stdout);
+ 	    prog_belch("unexpected RTS argument: %s", rts_argv[arg]);
+@@ -2157,3 +2174,5 @@
+   prog_belch("bad RTS option: %s", s);
+   stg_exit(EXIT_FAILURE);
+ }
++
++#endif /* !STANDALONE || DEBUG */
+diff -urN ghc-6.2.orig/ghc/rts/RtsStartup.c ghc-6.2/ghc/rts/RtsStartup.c
+--- ghc-6.2.orig/ghc/rts/RtsStartup.c	2003-12-16 17:58:31.000000000 +0100
++++ ghc-6.2/ghc/rts/RtsStartup.c	2004-03-06 13:13:17.000000000 +0100
+@@ -31,7 +31,7 @@
+ #include "FrontPanel.h"
+ #endif
+ 
+-#if defined(PROFILING) || defined(DEBUG)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG))
+ # include "Profiling.h"
+ # include "ProfHeap.h"
+ # include "RetainerProfile.h"
+@@ -120,12 +120,14 @@
+     /* Call the user hook to reset defaults, if present */
+     defaultsHook();
+ 
++#if !defined(STANDALONE) || defined(DEBUG)
+     /* Parse the flags, separating the RTS flags from the programs args */
+     if (argc != NULL && argv != NULL) {
+ 	setupRtsFlags(argc, *argv, &rts_argc, rts_argv);
+ 	prog_argc = *argc;
+ 	prog_argv = *argv;
+     }
++#endif
+ 
+ #if defined(PAR)
+     /* NB: this really must be done after processing the RTS flags */
+@@ -158,7 +160,7 @@
+     /* initialise thread label table (tso->char*) */
+     initThreadLabelTable();
+ 
+-#if defined(PROFILING) || defined(DEBUG)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG))
+     initProfiling1();
+ #endif
+ 
+@@ -185,9 +187,11 @@
+     }
+ #endif
+ 
++#ifndef STANDALONE
+ #ifdef HAVE_LOCALE_H
+     setlocale(LC_ALL,"");
+ #endif
++#endif
+ 
+     /* Record initialization times */
+     stat_endInit();
+@@ -285,7 +289,7 @@
+ 
+     freeGroup(bd);
+ 
+-#if defined(PROFILING) || defined(DEBUG)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG))
+     // This must be done after module initialisation.
+     // ToDo: make this work in the presence of multiple hs_add_root()s.
+     initProfiling2();
+@@ -328,6 +332,7 @@
+     /* stop the ticker */
+     stopTimer();
+     
++#ifndef STANDALONE
+     /* reset the standard file descriptors to blocking mode */
+     resetNonBlockingFd(0);
+     resetNonBlockingFd(1);
+@@ -352,6 +357,7 @@
+ 	sigprocmask(SIG_SETMASK, &old_sigset, NULL);
+     }
+ #endif
++#endif /* !STANDALONE */
+ 
+ #if defined(PAR)
+     /* controlled exit; good thread! */
+@@ -379,7 +385,7 @@
+     reportCCSProfiling();
+ #endif
+ 
+-#if defined(PROFILING) || defined(DEBUG)
++#if !defined(STANDALONE) && (defined(PROFILING) || defined(DEBUG))
+     endProfiling();
+ #endif
+ 
+diff -urN ghc-6.2.orig/ghc/rts/RtsUtils.c ghc-6.2/ghc/rts/RtsUtils.c
+--- ghc-6.2.orig/ghc/rts/RtsUtils.c	2003-12-16 17:58:31.000000000 +0100
++++ ghc-6.2/ghc/rts/RtsUtils.c	2004-03-06 12:13:13.000000000 +0100
+@@ -39,6 +39,7 @@
+ void
+ barf(char *s, ...)
+ {
++#ifndef STANDALONE
+   va_list ap;
+   va_start(ap,s);
+   /* don't fflush(stdout); WORKAROUND bug in Linux glibc */
+@@ -53,11 +54,16 @@
+   fflush(stderr);
+   stg_exit(EXIT_INTERNAL_ERROR);
+   va_end(ap);
++#else
++  (void) kprintf(s, (int *)(&s + 1));
++  abort();
++#endif
+ }
+ 
+ void
+ prog_belch(char *s, ...)
+ {
++#ifndef STANDALONE
+   va_list ap;
+   va_start(ap,s);
+   /* don't fflush(stdout); WORKAROUND bug in Linux glibc */
+@@ -67,17 +73,24 @@
+   vfprintf(stderr, s, ap);
+   fprintf(stderr, "\n");
+   va_end(ap);
++#else
++  kprintf(s, (int *)(&s + 1));
++#endif
+ }
+ 
+ void
+ belch(char *s, ...)
+ {
++#ifndef STANDALONE
+   va_list ap;
+   va_start(ap,s);
+   /* don't fflush(stdout); WORKAROUND bug in Linux glibc */
+   vfprintf(stderr, s, ap);
+   fprintf(stderr, "\n");
+   va_end(ap);
++#else
++  kprintf(s, (int *)(&s + 1));
++#endif
+ }
+ 
+ /* result-checking malloc wrappers. */
+@@ -130,10 +143,15 @@
+ void 
+ _stgAssert (char *filename, unsigned int linenum)
+ {
++#ifndef STANDALONE
+   fflush(stdout);
+   fprintf(stderr, "ASSERTION FAILED: file %s, line %u\n", filename, linenum);
+   fflush(stderr);
+   abort();
++#else
++  kprintf("ASSERTION FAILED: file %s, line %u\n", filename, linenum);
++  abort();
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -205,8 +223,8 @@
+ /* -----------------------------------------------------------------------------
+    Get the current time as a string.  Used in profiling reports.
+    -------------------------------------------------------------------------- */
+-
+-#if defined(PROFILING) || defined(DEBUG) || defined(PAR) || defined(GRAN)
++#if (defined(PROFILING) || defined(DEBUG) || defined(PAR) || defined(GRAN)) \
++	&& !defined(STANDALONE)
+ char *
+ time_str(void)
+ {
+@@ -229,7 +247,7 @@
+  * clean up for us.
+  * -------------------------------------------------------------------------- */
+ 
+-#if !defined(mingw32_TARGET_OS)
++#if !defined(mingw32_TARGET_OS) && !defined(STANDALONE)
+ void
+ resetNonBlockingFd(int fd)
+ {
+@@ -298,6 +316,7 @@
+ }
+ #endif /* PAR */
+ 
++#ifndef STANDALONE
+ /* -----------------------------------------------------------------------------
+    Print large numbers, with punctuation.
+    -------------------------------------------------------------------------- */
+@@ -324,7 +343,7 @@
+ 		(lnat)((x)%(ullong)1000));
+     return s;
+ }
+-
++#endif
+ 
+ // Can be used as a breakpoint to set on every heap check failure.
+ #ifdef DEBUG
+diff -urN ghc-6.2.orig/ghc/rts/RtsUtils.h ghc-6.2/ghc/rts/RtsUtils.h
+--- ghc-6.2.orig/ghc/rts/RtsUtils.h	2003-12-16 17:58:31.000000000 +0100
++++ ghc-6.2/ghc/rts/RtsUtils.h	2004-03-06 11:51:05.000000000 +0100
+@@ -39,3 +39,7 @@
+ #ifdef DEBUG
+ extern void heapCheckFail( void );
+ #endif
++
++#ifdef STANDALONE
++extern void kprintf(const char *fmt, ...);
++#endif
+diff -urN ghc-6.2.orig/ghc/rts/Schedule.c ghc-6.2/ghc/rts/Schedule.c
+--- ghc-6.2.orig/ghc/rts/Schedule.c	2003-12-16 18:07:50.000000000 +0100
++++ ghc-6.2/ghc/rts/Schedule.c	2004-05-21 18:48:11.000000000 +0200
+@@ -707,6 +707,19 @@
+ 
+ 	if ( !EMPTY_RUN_QUEUE() ) { goto not_deadlocked; }
+ 
++#ifdef STANDALONE
++	/* Standalone means that we have interrupt handlers.
++	 * We should then just wait for the next interrupt to arrive.
++	 */
++	IF_DEBUG(scheduler,
++		 sched_belch("still deadlocked, waiting next interrupt..."));
++	while ( !EMPTY_RUN_QUEUE() ) {
++	  __asm__("hlt");
++	  /* FIXME: Does that make sense ? */
++	  goto not_deadlocked;
++	}
++#endif
++
+ 	IF_DEBUG(scheduler, 
+ 		 sched_belch("still deadlocked, checking for black holes..."));
+ 	detectBlackHoles();
+@@ -1205,9 +1218,13 @@
+ 	ret = ThreadFinished;
+ 	break;
+     case ThreadRunGHC:
++#ifndef STANDALONE
+ 	errno = t->saved_errno;
++#endif
+ 	ret = StgRun((StgFunPtr) stg_returnToStackTop, &cap->r);
++#ifndef STANDALONE
+ 	t->saved_errno = errno;
++#endif
+ 	break;
+     case ThreadInterpret:
+ 	ret = interpretBCO(cap);
+@@ -1639,7 +1656,7 @@
+ StgInt
+ forkProcess(HsStablePtr *entry)
+ {
+-#ifndef mingw32_TARGET_OS
++#if !defined(mingw32_TARGET_OS) && !defined(STANDALONE)
+   pid_t pid;
+   StgTSO* t,*next;
+   StgMainThread *m;
+@@ -1753,7 +1770,9 @@
+ {
+   nat tok;
+   Capability *cap;
++#ifndef STANDALONE
+   int saved_errno = errno;
++#endif
+ 
+   /* assume that *reg is a pointer to the StgRegTable part
+    * of a Capability.
+@@ -1801,7 +1820,9 @@
+   THREAD_RUNNABLE();
+   RELEASE_LOCK(&sched_mutex);
+   
++#ifndef STANDALONE
+   errno = saved_errno;
++#endif
+   return tok; 
+ }
+ 
+@@ -1811,7 +1832,9 @@
+ {
+   StgTSO *tso, **prev;
+   Capability *cap;
++#ifndef STANDALONE
+   int saved_errno = errno;
++#endif
+ 
+ #if defined(RTS_SUPPORTS_THREADS)
+   /* Wait for permission to re-enter the RTS with the result. */
+@@ -1853,7 +1876,9 @@
+ #if defined(RTS_SUPPORTS_THREADS)
+   RELEASE_LOCK(&sched_mutex);
+ #endif
++#ifndef STANDALONE
+   errno = saved_errno;
++#endif
+   return &cap->r;
+ }
+ 
+@@ -1982,7 +2007,9 @@
+   tso->why_blocked  = NotBlocked;
+   tso->blocked_exceptions = NULL;
+ 
++#ifndef STANDALONE
+   tso->saved_errno = 0;
++#endif
+   
+   tso->stack_size   = stack_size;
+   tso->max_stack_size = round_to_mblocks(RtsFlags.GcFlags.maxStkSize) 
+@@ -2949,7 +2976,10 @@
+ }
+ 
+ #else /* !GRAN && !PAR */
+-static StgTSO *
++#ifndef STANDALONE
++static
++#endif
++StgTSO *
+ unblockOneLocked(StgTSO *tso)
+ {
+   StgTSO *next;
+@@ -3233,6 +3262,9 @@
+ 
+   case BlockedOnRead:
+   case BlockedOnWrite:
++#ifdef STANDALONE
++  case BlockedWaitingInterrupts:
++#endif
+ #if defined(mingw32_TARGET_OS)
+   case BlockedOnDoProc:
+ #endif
+@@ -3363,6 +3394,9 @@
+ 
+   case BlockedOnRead:
+   case BlockedOnWrite:
++#ifdef STANDALONE
++  case BlockedWaitingInterrupts:
++#endif
+ #if defined(mingw32_TARGET_OS)
+   case BlockedOnDoProc:
+ #endif
+@@ -3775,8 +3809,13 @@
+   case BlockedOnWrite:
+     fprintf(stderr,"is blocked on write to fd %d", tso->block_info.fd);
+     break;
++#ifdef STANDALONE
++  case BlockedWaitingInterrupts:
++    fprintf(stderr,"is blocked waiting interrupts");
++    break;
++#endif
+ #if defined(mingw32_TARGET_OS)
+-    case BlockedOnDoProc:
++  case BlockedOnDoProc:
+     fprintf(stderr,"is blocked on proc (request: %d)", tso->block_info.async_result->reqID);
+     break;
+ #endif
+@@ -4000,7 +4039,7 @@
+   } /* for */
+   fputc('\n', stderr);
+ }
+-#else
++# elif !defined(STANDALONE)
+ /* 
+    Nice and easy: only TSOs on the blocking queue
+ */
+diff -urN ghc-6.2.orig/ghc/rts/Schedule.h ghc-6.2/ghc/rts/Schedule.h
+--- ghc-6.2.orig/ghc/rts/Schedule.h	2003-12-16 18:07:15.000000000 +0100
++++ ghc-6.2/ghc/rts/Schedule.h	2004-03-11 12:55:30.000000000 +0100
+@@ -318,4 +318,9 @@
+ extern void sched_belch(char *s, ...);
+ #endif
+ 
++#ifdef STANDALONE
++extern StgStablePtr irqHandlerThreads[];
++StgTSO * unblockOneLocked(StgTSO *tso);
++#endif
++
+ #endif /* __SCHEDULE_H__ */
+diff -urN ghc-6.2.orig/ghc/rts/Select.c ghc-6.2/ghc/rts/Select.c
+--- ghc-6.2.orig/ghc/rts/Select.c	2003-12-16 17:58:33.000000000 +0100
++++ ghc-6.2/ghc/rts/Select.c	2004-03-06 11:16:28.000000000 +0100
+@@ -28,7 +28,9 @@
+ #  include <sys/time.h>
+ # endif
+ 
++#ifdef HAVE_ERRNO_H
+ #include <errno.h>
++#endif
+ #include <string.h>
+ 
+ #ifdef HAVE_UNISTD_H
+@@ -198,6 +200,7 @@
+       tv.tv_usec = min % 1000000;
+ 
+       while ((numFound = select(maxfd+1, &rfd, &wfd, NULL, &tv)) < 0) {
++#ifndef STANDALONE
+ 	  if (errno != EINTR) {
+ 	    /* Handle bad file descriptors by unblocking all the
+ 	       waiting threads. Why? Because a thread might have been
+@@ -226,6 +229,7 @@
+ 	      barf("select failed");
+ 	    }
+ 	  }
++#endif
+ 	  ACQUIRE_LOCK(&sched_mutex);
+ #ifdef RTS_SUPPORTS_THREADS
+           isWorkerBlockedInAwaitEvent = rtsFalse;
+@@ -294,6 +298,7 @@
+ 	      case BlockedOnWrite:
+ 		  ready = unblock_all || FD_ISSET(tso->block_info.fd, &wfd);
+ 		  break;
++
+ 	      default:
+ 		  barf("awaitEvent");
+ 	      }
+diff -urN ghc-6.2.orig/ghc/rts/Signals.c ghc-6.2/ghc/rts/Signals.c
+--- ghc-6.2.orig/ghc/rts/Signals.c	2003-12-16 17:58:33.000000000 +0100
++++ ghc-6.2/ghc/rts/Signals.c	2004-02-27 15:33:05.000000000 +0100
+@@ -7,6 +7,8 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
++#ifndef STANDALONE
++
+ /* This is non-Posix-compliant.
+    #include "PosixSource.h" 
+ */
+@@ -477,3 +479,5 @@
+ }
+ 
+ #endif /* RTS_USER_SIGNALS */
++
++#endif
+diff -urN ghc-6.2.orig/ghc/rts/Signals.h ghc-6.2/ghc/rts/Signals.h
+--- ghc-6.2.orig/ghc/rts/Signals.h	2003-12-16 17:58:34.000000000 +0100
++++ ghc-6.2/ghc/rts/Signals.h	2004-02-27 15:33:05.000000000 +0100
+@@ -7,7 +7,7 @@
+  *
+  * ---------------------------------------------------------------------------*/
+ 
+-#if !defined(PAR) && !defined(mingw32_TARGET_OS)
++#if !defined(PAR) && !defined(mingw32_TARGET_OS) && !defined(STANDALONE)
+ #define RTS_USER_SIGNALS 1
+ 
+ extern StgPtr pending_handler_buf[];
+diff -urN ghc-6.2.orig/ghc/rts/Stats.c ghc-6.2/ghc/rts/Stats.c
+--- ghc-6.2.orig/ghc/rts/Stats.c	2003-12-16 17:58:34.000000000 +0100
++++ ghc-6.2/ghc/rts/Stats.c	2004-03-06 12:37:24.000000000 +0100
+@@ -190,6 +190,7 @@
+ 
+ #else /* !win32 */
+ 
++#ifndef STANDALONE
+ static void
+ getTimes(void)
+ {
+@@ -208,8 +209,12 @@
+     CurrentElapsedTime = r;
+     CurrentUserTime = t.tms_utime;
+ #endif
+-
+ }
++#else
++
++static void getTimes(void) {}
++
++#endif /* !STANDALONE */
+ #endif /* !win32 */
+ 
+ /* mut_user_time_during_GC() and mut_user_time()
+@@ -261,7 +266,7 @@
+ {
+   /* ToDo (on NT): better, get this via the performance data
+      that's stored in the registry. */
+-# if !defined(HAVE_GETRUSAGE) || irix_TARGET_OS || defined(mingw32_TARGET_OS) || defined(cygwin32_TARGET_OS)
++# if !defined(HAVE_GETRUSAGE) || irix_TARGET_OS || defined(mingw32_TARGET_OS) || defined(cygwin32_TARGET_OS) || defined(STANDALONE)
+     return 0;
+ # else
+     struct rusage t;
+@@ -274,6 +279,7 @@
+ void
+ initStats(void)
+ {
++#ifndef STANDALONE
+     nat i;
+     FILE *sf = RtsFlags.GcFlags.statsFile;
+   
+@@ -288,7 +294,8 @@
+     for (i = 0; i < RtsFlags.GcFlags.generations; i++) {
+ 	GC_coll_times[i] = 0;
+     }
+-}    
++#endif
++}
+ 
+ /* -----------------------------------------------------------------------------
+    Initialisation time...
+@@ -297,6 +304,7 @@
+ void
+ stat_startInit(void)
+ {
++#ifndef STANDALONE
+     /* Determine TicksPerSecond ... */
+ #if defined(CLK_TCK)		/* defined by POSIX */
+     TicksPerSecond = CLK_TCK;
+@@ -328,11 +336,13 @@
+ 
+     getTimes();
+     ElapsedTimeStart = CurrentElapsedTime;
++#endif
+ }
+ 
+ void 
+ stat_endInit(void)
+ {
++#ifndef STANDALONE
+     getTimes();
+     InitUserTime = CurrentUserTime;
+     InitElapsedStamp = CurrentElapsedTime; 
+@@ -341,6 +351,7 @@
+     } else {
+ 	InitElapsedTime = CurrentElapsedTime - ElapsedTimeStart;
+     }
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -352,6 +363,7 @@
+ void
+ stat_startExit(void)
+ {
++#ifndef STANDALONE
+     getTimes();
+     MutElapsedStamp = CurrentElapsedTime;
+     MutElapsedTime = CurrentElapsedTime - GCe_tot_time -
+@@ -370,11 +382,13 @@
+     MutUserTime = CurrentUserTime - GC_tot_time - PROF_VAL(RP_tot_time + HC_tot_time) - InitUserTime;
+     if (MutUserTime < 0) { MutUserTime = 0; }
+ #endif
++#endif
+ }
+ 
+ void
+ stat_endExit(void)
+ {
++#ifndef STANDALONE
+     getTimes();
+ #ifdef SMP
+     ExitUserTime = CurrentUserTime - MutUserTime;
+@@ -388,6 +402,7 @@
+     if (ExitElapsedTime < 0) {
+ 	ExitElapsedTime = 0;
+     }
++#endif /* STANDALONE */
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -395,6 +410,7 @@
+    -------------------------------------------------------------------------- */
+ 
+ static nat rub_bell = 0;
++static nat bell_tone = 0;
+ 
+ /*  initialise global variables needed during GC
+  *
+@@ -404,6 +420,7 @@
+ void
+ stat_startGC(void)
+ {
++#ifndef STANDALONE
+     nat bell = RtsFlags.GcFlags.ringBell;
+ 
+     if (bell) {
+@@ -430,6 +447,10 @@
+ 	    GC_start_faults = pageFaults();
+ 	}
+     }
++#else /* STANDALONE */
++  bell_tone = (bell_tone + 1) & 3;
++  ((StgWord16*)0xB8000)[79] = 0x1700 | "|/-\\"[bell_tone];
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -439,6 +460,7 @@
+ void
+ stat_endGC(lnat alloc, lnat collect, lnat live, lnat copied, lnat gen)
+ {
++#ifndef STANDALONE
+     FILE *sf = RtsFlags.GcFlags.statsFile;
+ 
+     if (RtsFlags.GcFlags.giveStats != NO_GC_STATS) {
+@@ -503,6 +525,7 @@
+ 	fprintf(stderr, "\b\b\b  \b\b\b");
+ 	rub_bell = 0;
+     }
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+@@ -620,6 +643,7 @@
+ void
+ stat_exit(int alloc)
+ {
++#ifndef STANDALONE
+     FILE *sf = RtsFlags.GcFlags.statsFile;
+     
+     if (RtsFlags.GcFlags.giveStats != NO_GC_STATS) {
+@@ -764,6 +788,7 @@
+ 	    fclose(sf);
+ 	}
+     }
++#endif
+ }
+ 
+ /* -----------------------------------------------------------------------------
+diff -urN ghc-6.2.orig/libraries/base/Control/Concurrent/Chan.hs ghc-6.2/libraries/base/Control/Concurrent/Chan.hs
+--- ghc-6.2.orig/libraries/base/Control/Concurrent/Chan.hs	2002-06-03 15:19:37.000000000 +0200
++++ ghc-6.2/libraries/base/Control/Concurrent/Chan.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -32,7 +32,11 @@
+ 
+ import Prelude
+ 
++#ifdef __GLASGOW_HASKELL__
++import GHC.IOBase		( unsafeInterleaveIO )
++#else
+ import System.IO.Unsafe		( unsafeInterleaveIO )
++#endif
+ import Control.Concurrent.MVar
+ 
+ -- A channel is represented by two @MVar@s keeping track of the two ends
+diff -urN ghc-6.2.orig/libraries/base/Control/Concurrent.hs ghc-6.2/libraries/base/Control/Concurrent.hs
+--- ghc-6.2.orig/libraries/base/Control/Concurrent.hs	2003-11-10 13:08:46.000000000 +0100
++++ ghc-6.2/libraries/base/Control/Concurrent.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -64,7 +64,7 @@
+ 
+ 	-- * Bound Threads
+ 	-- $boundthreads
+-#ifdef __GLASGOW_HASKELL__
++#if defined(__GLASGOW_HASKELL__) && !defined(STANDALONE)
+ 	rtsSupportsBoundThreads,
+ 	forkOS,
+ 	isCurrentThreadBound,
+@@ -346,7 +346,7 @@
+ from @main@ or from a @foreign export@.
+ -}
+ 
+-#ifdef __GLASGOW_HASKELL__
++#if defined(__GLASGOW_HASKELL__) && !defined(STANDALONE)
+ 
+ -- | 'True' if bound threads are supported.
+ -- If @rtsSupportsBoundThreads@ is 'False', 'isCurrentThreadBound'
+diff -urN ghc-6.2.orig/libraries/base/Control/Exception.hs ghc-6.2/libraries/base/Control/Exception.hs
+--- ghc-6.2.orig/libraries/base/Control/Exception.hs	2003-08-31 01:01:49.000000000 +0200
++++ ghc-6.2/libraries/base/Control/Exception.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -64,7 +64,9 @@
+ 	dynExceptions,		-- :: Exception -> Maybe Dynamic
+ 	assertions,		-- :: Exception -> Maybe String
+ 	asyncExceptions, 	-- :: Exception -> Maybe AsyncException
++#ifndef STANDALONE
+ 	userErrors,		-- :: Exception -> Maybe String
++#endif
+ 
+ 	-- * Dynamic exceptions
+ 
+@@ -120,8 +122,12 @@
+ #endif
+ 
+ import Prelude 		hiding ( catch )
++#ifdef __GLASGOW_HASKELL__
++import GHC.IOBase		( unsafePerformIO )
++#else
+ import System.IO.Error	hiding ( catch, try )
+-import System.IO.Unsafe (unsafePerformIO)
++import System.IO.Unsafe		( unsafePerformIO )
++#endif
+ import Data.Dynamic
+ 
+ #include "Typeable.h"
+@@ -324,7 +330,6 @@
+ assertions		:: Exception -> Maybe String
+ dynExceptions		:: Exception -> Maybe Dynamic
+ asyncExceptions 	:: Exception -> Maybe AsyncException
+-userErrors		:: Exception -> Maybe String
+ 
+ ioErrors (IOException e) = Just e
+ ioErrors _ = Nothing
+@@ -344,8 +349,11 @@
+ asyncExceptions (AsyncException e) = Just e
+ asyncExceptions _ = Nothing
+ 
++#ifndef STANDALONE
++userErrors :: Exception -> Maybe String
+ userErrors (IOException e) | isUserError e = Just (ioeGetErrorString e)
+ userErrors _ = Nothing
++#endif
+ 
+ -----------------------------------------------------------------------------
+ -- Some Useful Functions
+diff -urN ghc-6.2.orig/libraries/base/Control/Monad/Trans.hs ghc-6.2/libraries/base/Control/Monad/Trans.hs
+--- ghc-6.2.orig/libraries/base/Control/Monad/Trans.hs	2003-03-08 20:02:39.000000000 +0100
++++ ghc-6.2/libraries/base/Control/Monad/Trans.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -25,7 +25,11 @@
+ 
+ import Prelude
+ 
++#ifndef STANDALONE
+ import System.IO
++#else
++import GHC.IOBase
++#endif
+ 
+ -- ---------------------------------------------------------------------------
+ -- MonadTrans class
+diff -urN ghc-6.2.orig/libraries/base/Data/Array/IO.hs ghc-6.2/libraries/base/Data/Array/IO.hs
+--- ghc-6.2.orig/libraries/base/Data/Array/IO.hs	2003-05-19 18:48:18.000000000 +0200
++++ ghc-6.2/libraries/base/Data/Array/IO.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -24,9 +24,11 @@
+    -- * Overloaded mutable array interface
+    module Data.Array.MArray,
+ 
++#ifndef STANDALONE
+    -- * Doing I\/O with @IOUArray@s
+    hGetArray,		-- :: Handle -> IOUArray Int Word8 -> Int -> IO Int
+    hPutArray,		-- :: Handle -> IOUArray Int Word8 -> Int -> IO ()
++#endif /* !STANDALONE */
+  ) where
+ 
+ import Prelude
+@@ -114,6 +116,9 @@
+ "unsafeThaw/IOUArray" unsafeThaw = unsafeThawIOUArray
+     #-}
+ 
++
++#ifndef STANDALONE
++
+ -- ---------------------------------------------------------------------------
+ -- hGetArray
+ 
+@@ -224,6 +229,8 @@
+ 			    ("illegal buffer size " ++ showsPrec 9 (sz::Int) [])
+ 			    Nothing)
+ 
++#endif /* !STANDALONE */
++
+ #else /* !__GLASGOW_HASKELL__ */
+ hGetArray :: Handle -> IOUArray Int Word8 -> Int -> IO Int
+ hGetArray handle arr count
+diff -urN ghc-6.2.orig/libraries/base/Data/PackedString.hs ghc-6.2/libraries/base/Data/PackedString.hs
+--- ghc-6.2.orig/libraries/base/Data/PackedString.hs	2003-07-29 14:03:13.000000000 +0200
++++ ghc-6.2/libraries/base/Data/PackedString.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -23,8 +23,8 @@
+ 	packString,  -- :: String -> PackedString
+ 	unpackPS,    -- :: PackedString -> String
+ 
+-#ifndef __NHC__
+-	-- * I\/O with @PackedString@s	
++#if !defined(__NHC__) && !defined(STANDALONE)
++	-- * I\/O with @PackedString@s
+ 	hPutPS,      -- :: Handle -> PackedString -> IO ()
+ 	hGetPS,      -- :: Handle -> Int -> IO PackedString
+ #endif
+@@ -74,7 +74,11 @@
+ import Data.Typeable
+ import Data.Char
+ 
++#ifndef STANDALONE
+ import System.IO
++#else
++import GHC.IOBase
++#endif
+ 
+ -- -----------------------------------------------------------------------------
+ -- PackedString type declaration
+@@ -303,6 +307,8 @@
+ substrPS :: PackedString -> Int -> Int -> PackedString
+ substrPS (PS ps) begin end = packString [ ps ! i | i <- [begin..end] ]
+ 
++#ifndef STANDALONE
++
+ -- -----------------------------------------------------------------------------
+ -- hPutPS
+ 
+@@ -334,6 +340,8 @@
+   chars <- mapM (\i -> readArray arr i >>= return.chr.fromIntegral) [0..l-1]
+   return (packString chars)
+ 
++#endif /* !STANDALONE */
++
+ #else	/* __NHC__ */
+ 
+ --import Prelude hiding (append, break, concat, cons, drop, dropWhile,
+diff -urN ghc-6.2.orig/libraries/base/Debug/Trace.hs ghc-6.2/libraries/base/Debug/Trace.hs
+--- ghc-6.2.orig/libraries/base/Debug/Trace.hs	2003-01-06 15:30:12.000000000 +0100
++++ ghc-6.2/libraries/base/Debug/Trace.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -13,10 +13,14 @@
+ -----------------------------------------------------------------------------
+ 
+ module Debug.Trace (
++#ifndef STANDALONE
+ 	-- * Tracing
+ 	trace -- :: String -> a -> a
++#endif
+   ) where
+ 
++#ifndef STANDALONE
++
+ import Prelude
+ import System.IO.Unsafe
+ import System.IO
+@@ -48,3 +52,5 @@
+ #ifdef __GLASGOW_HASKELL__
+ foreign import ccall "PostTraceHook" postTraceHook :: Int -> IO ()
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/Foreign/C/Error.hs ghc-6.2/libraries/base/Foreign/C/Error.hs
+--- ghc-6.2.orig/libraries/base/Foreign/C/Error.hs	2003-08-20 17:44:19.000000000 +0200
++++ ghc-6.2/libraries/base/Foreign/C/Error.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -15,6 +15,7 @@
+ 
+ module Foreign.C.Error (
+ 
++#ifndef STANDALONE
+   -- Haskell representation for "errno" values
+   --
+   Errno(..),		-- instance: Eq
+@@ -76,8 +77,10 @@
+   throwErrnoIfMinus1RetryMayBlock,
+   throwErrnoIfMinus1RetryMayBlock_,  
+   throwErrnoIfNullRetryMayBlock
++#endif
+ ) where
+ 
++#ifndef STANDALONE
+ 
+ -- this is were we get the CONST_XXX definitions from that configure
+ -- calculated for us
+@@ -528,3 +531,5 @@
+ #endif
+ 
+ foreign import ccall unsafe "string.h" strerror :: Errno -> IO (Ptr CChar)
++
++#endif
+diff -urN ghc-6.2.orig/libraries/base/Foreign/C/Types.hs ghc-6.2/libraries/base/Foreign/C/Types.hs
+--- ghc-6.2.orig/libraries/base/Foreign/C/Types.hs	2003-09-24 13:47:56.000000000 +0200
++++ ghc-6.2/libraries/base/Foreign/C/Types.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -20,11 +20,16 @@
+ 	  CChar,  CSChar,  CUChar
+ 	, CShort, CUShort, CInt,   CUInt
+ 	, CLong,  CULong
+-	, CPtrdiff, CSize, CWchar, CSigAtomic
++	, CPtrdiff, CSize, CWchar
++#ifndef STANDALONE
++        , CSigAtomic
++#endif
+         , CLLong, CULLong
++#ifndef STANDALONE
+ 	  -- Numeric types, instances of: Eq, Ord, Num, Read, Show, Enum,
+ 	  -- Typeable, Storable
+ 	, CClock,   CTime
++#endif
+ 
+ 	  -- Floating types, instances of: Eq, Ord, Num, Read, Show, Enum,
+ 	  -- Typeable, Storable, Real, Fractional, Floating, RealFrac,
+@@ -42,7 +47,10 @@
+ #endif
+ 
+           -- Instances of: Eq and Storable
+-	, CFile,        CFpos,     CJmpBuf
++#ifndef STANDALONE
++	, CFile,        CFpos
++#endif
++        , CJmpBuf
+ 	) where
+ 
+ #ifdef __NHC__
+@@ -140,26 +148,36 @@
+ INTEGRAL_TYPE(CPtrdiff,tyConCPtrdiff,"CPtrdiff",HTYPE_PTRDIFF_T)
+ INTEGRAL_TYPE(CSize,tyConCSize,"CSize",HTYPE_SIZE_T)
+ INTEGRAL_TYPE(CWchar,tyConCWchar,"CWchar",HTYPE_WCHAR_T)
+-INTEGRAL_TYPE(CSigAtomic,tyConCSigAtomic,"CSigAtomic",HTYPE_SIG_ATOMIC_T)
+ 
+ {-# RULES
+ "fromIntegral/a->CPtrdiff"   fromIntegral = \x -> CPtrdiff   (fromIntegral x)
+ "fromIntegral/a->CSize"      fromIntegral = \x -> CSize      (fromIntegral x)
+ "fromIntegral/a->CWchar"     fromIntegral = \x -> CWchar     (fromIntegral x)
+-"fromIntegral/a->CSigAtomic" fromIntegral = \x -> CSigAtomic (fromIntegral x)
+ 
+ "fromIntegral/CPtrdiff->a"   fromIntegral = \(CPtrdiff   x) -> fromIntegral x
+ "fromIntegral/CSize->a"      fromIntegral = \(CSize      x) -> fromIntegral x
+ "fromIntegral/CWchar->a"     fromIntegral = \(CWchar     x) -> fromIntegral x
++ #-}
++
++#ifndef STANDALONE
++INTEGRAL_TYPE(CSigAtomic,tyConCSigAtomic,"CSigAtomic",HTYPE_SIG_ATOMIC_T)
++
++{-# RULES
++"fromIntegral/a->CSigAtomic" fromIntegral = \x -> CSigAtomic (fromIntegral x)
+ "fromIntegral/CSigAtomic->a" fromIntegral = \(CSigAtomic x) -> fromIntegral x
+  #-}
++#endif
+ 
++#ifndef STANDALONE
+ INTEGRAL_TYPE(CClock,tyConCClock,"CClock",HTYPE_CLOCK_T)
+ INTEGRAL_TYPE(CTime,tyConCTime,"CTime",HTYPE_TIME_T)
++#endif
+ 
+ -- FIXME: Implement and provide instances for Eq and Storable
++#ifndef STANDALONE
+ data CFile = CFile
+ data CFpos = CFpos
++#endif
+ data CJmpBuf = CJmpBuf
+ 
+ -- C99 types which are still missing include:
+diff -urN ghc-6.2.orig/libraries/base/GHC/Handle.hs ghc-6.2/libraries/base/GHC/Handle.hs
+--- ghc-6.2.orig/libraries/base/GHC/Handle.hs	2003-08-31 20:41:30.000000000 +0200
++++ ghc-6.2/libraries/base/GHC/Handle.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -18,6 +18,7 @@
+ -----------------------------------------------------------------------------
+ 
+ module GHC.Handle (
++#ifndef STANDALONE
+   withHandle, withHandle', withHandle_,
+   wantWritableHandle, wantReadableHandle, wantSeekableHandle,
+   
+@@ -51,9 +52,11 @@
+ #ifdef DEBUG_DUMP
+   puts,
+ #endif
+-
++#endif /* !STANDALONE */
+  ) where
+ 
++#ifndef STANDALONE
++
+ #include "config.h"
+ 
+ import Control.Monad
+@@ -1450,3 +1453,5 @@
+ foreign import ccall unsafe "__hscore_seek_cur" sEEK_CUR :: CInt
+ foreign import ccall unsafe "__hscore_seek_set" sEEK_SET :: CInt
+ foreign import ccall unsafe "__hscore_seek_end" sEEK_END :: CInt
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/GHC/IO.hs ghc-6.2/libraries/base/GHC/IO.hs
+--- ghc-6.2.orig/libraries/base/GHC/IO.hs	2003-10-21 16:15:00.000000000 +0200
++++ ghc-6.2/libraries/base/GHC/IO.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -17,6 +17,7 @@
+ -----------------------------------------------------------------------------
+ 
+ module GHC.IO ( 
++#ifndef STANDALONE
+    hWaitForInput, hGetChar, hGetLine, hGetContents, hPutChar, hPutStr,
+    commitBuffer',	-- hack, see below
+    hGetcBuffered,	-- needed by ghc/compiler/utils/StringBuffer.lhs
+@@ -28,8 +29,11 @@
+    memcpy_ptr_baoff,
+    memcpy_baoff_ba,
+    memcpy_baoff_ptr,
++#endif /* !STANDALONE */
+  ) where
+ 
++#ifndef STANDALONE
++
+ #include "config.h"
+ 
+ import Foreign
+@@ -889,3 +893,5 @@
+ 			    InvalidArgument  fn
+ 			    ("illegal buffer size " ++ showsPrec 9 sz [])
+ 			    Nothing)
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/GHC/TopHandler.lhs ghc-6.2/libraries/base/GHC/TopHandler.lhs
+--- ghc-6.2.orig/libraries/base/GHC/TopHandler.lhs	2003-08-04 20:20:44.000000000 +0200
++++ ghc-6.2/libraries/base/GHC/TopHandler.lhs	2004-02-27 15:33:05.000000000 +0100
+@@ -20,7 +20,9 @@
+ 
+ import Prelude
+ 
++#ifndef STANDALONE
+ import System.IO
++#endif
+ 
+ import Foreign.C.String
+ import Foreign.Ptr
+@@ -68,7 +70,9 @@
+ 
+ reportStackOverflow :: Bool -> IO a
+ reportStackOverflow bombOut = do
++#ifndef STANDALONE
+    (hFlush stdout) `catchException` (\ _ -> return ())
++#endif
+    callStackOverflowHook
+    if bombOut 
+ 	then exit 2
+@@ -76,7 +80,9 @@
+ 
+ reportError :: Bool -> String -> IO a
+ reportError bombOut str = do
++#ifndef STANDALONE
+    (hFlush stdout) `catchException` (\ _ -> return ())
++#endif
+    withCStringLen str $ \(cstr,len) -> do
+      writeErrString errorHdrHook cstr len
+      if bombOut 
+diff -urN ghc-6.2.orig/libraries/base/Prelude.hs ghc-6.2/libraries/base/Prelude.hs
+--- ghc-6.2.orig/libraries/base/Prelude.hs	2003-11-26 11:01:42.000000000 +0100
++++ ghc-6.2/libraries/base/Prelude.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -119,6 +119,8 @@
+     
+     -- * Basic Input and output
+     IO,
++
++#ifndef STANDALONE
+     -- ** Simple I\/O operations
+     -- All I/O functions defined here are character oriented.  The
+     -- treatment of the newline character will vary on different systems.
+@@ -134,6 +136,7 @@
+     -- *** Files
+     FilePath,
+     readFile, writeFile, appendFile, readIO, readLn,
++#endif /* !STANDALONE */
+     -- ** Exception handling in the I\/O monad
+     IOError, ioError, userError, catch
+ 
+@@ -141,7 +144,9 @@
+ 
+ #ifndef __HUGS__
+ import Control.Monad
++#ifndef STANDALONE
+ import System.IO
++#endif
+ import Text.Read
+ import Text.Show
+ import Data.List
+diff -urN ghc-6.2.orig/libraries/base/System/CPUTime.hsc ghc-6.2/libraries/base/System/CPUTime.hsc
+--- ghc-6.2.orig/libraries/base/System/CPUTime.hsc	2003-09-26 10:52:41.000000000 +0200
++++ ghc-6.2/libraries/base/System/CPUTime.hsc	2004-02-27 15:33:05.000000000 +0100
+@@ -14,10 +14,14 @@
+ 
+ module System.CPUTime 
+ 	(
++#ifndef STANDALONE
+          getCPUTime,       -- :: IO Integer
+ 	 cpuTimePrecision  -- :: Integer
++#endif
+         ) where
+ 
++#ifndef STANDALONE
++
+ import Prelude
+ 
+ import Data.Ratio
+@@ -138,3 +142,5 @@
+ foreign import ccall unsafe sysconf :: CInt -> IO CLong
+ #endif
+ #endif /* __GLASGOW_HASKELL__ */
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/Cmd.hs ghc-6.2/libraries/base/System/Cmd.hs
+--- ghc-6.2.orig/libraries/base/System/Cmd.hs	2003-06-19 12:38:15.000000000 +0200
++++ ghc-6.2/libraries/base/System/Cmd.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -13,12 +13,17 @@
+ -----------------------------------------------------------------------------
+ 
+ module System.Cmd
+-    ( system,        -- :: String -> IO ExitCode
++    (
++#ifndef STANDALONE
++      system,        -- :: String -> IO ExitCode
+ #ifdef __GLASGOW_HASKELL__
+       rawSystem,     -- :: FilePath -> [String] -> IO ExitCode
+ #endif
++#endif
+     ) where
+ 
++#ifndef STANDALONE
++
+ import Prelude
+ 
+ #ifdef __GLASGOW_HASKELL__
+@@ -119,3 +124,5 @@
+ #endif
+ 
+ #endif  /* __GLASGOW_HASKELL__ */
++
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/Directory.hs ghc-6.2/libraries/base/System/Directory.hs
+--- ghc-6.2.orig/libraries/base/System/Directory.hs	2003-11-26 11:01:53.000000000 +0100
++++ ghc-6.2/libraries/base/System/Directory.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -14,6 +14,7 @@
+ 
+ module System.Directory 
+    ( 
++#ifndef STANDALONE
+     -- $intro
+ 
+     -- * Actions on directories
+@@ -51,8 +52,11 @@
+     -- * Timestamps
+ 
+     , getModificationTime       -- :: FilePath -> IO ClockTime
++#endif
+    ) where
+ 
++#ifndef STANDALONE
++
+ #ifdef __NHC__
+ import Directory
+ #elif defined(__HUGS__)
+@@ -663,3 +667,5 @@
+ foreign import ccall unsafe "__hscore_S_IXUSR" s_IXUSR :: CMode
+ 
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/IO/Error.hs ghc-6.2/libraries/base/System/IO/Error.hs
+--- ghc-6.2.orig/libraries/base/System/IO/Error.hs	2003-08-30 14:26:57.000000000 +0200
++++ ghc-6.2/libraries/base/System/IO/Error.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -15,6 +15,7 @@
+ -----------------------------------------------------------------------------
+ 
+ module System.IO.Error (
++#ifndef STANDALONE
+ 
+     -- * I\/O errors
+     IOError,			-- = IOException
+@@ -86,8 +87,11 @@
+ #ifndef __NHC__
+     modifyIOError,		-- :: (IOError -> IOError) -> IO a -> IO a
+ #endif
++#endif
+   ) where
+ 
++#ifndef STANDALONE
++
+ import Data.Either
+ import Data.Maybe
+ 
+@@ -377,3 +381,5 @@
+ annotateIOError (PatternError loc) msg' file' hdl' =
+     PatternError (loc++'\n':msg')
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/IO.hs ghc-6.2/libraries/base/System/IO.hs
+--- ghc-6.2.orig/libraries/base/System/IO.hs	2003-11-26 11:02:02.000000000 +0100
++++ ghc-6.2/libraries/base/System/IO.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -19,6 +19,8 @@
+     IO,			       -- instance MonadFix
+     fixIO,		       -- :: (a -> IO a) -> IO a
+ 
++#ifndef STANDALONE
++
+     -- * Files and handles
+ 
+     FilePath,		       -- :: String
+@@ -154,6 +156,8 @@
+ #endif
+ 
+     module System.IO.Error,
++
++#endif /* !STANDALONE */
+   ) where
+ 
+ #ifdef __GLASGOW_HASKELL__
+@@ -209,6 +213,8 @@
+ import NHC.IOExtras (fixIO)
+ #endif
+ 
++#ifndef STANDALONE
++
+ import System.IO.Error (
+     isAlreadyExistsError, isDoesNotExistError,  -- :: IOError -> Bool
+     isAlreadyInUseError, isFullError, 
+@@ -372,6 +378,8 @@
+ hPrint		:: Show a => Handle -> a -> IO ()
+ hPrint hdl 	=  hPutStrLn hdl . show
+ 
++#endif /* !STANDALONE */
++
+ -- ---------------------------------------------------------------------------
+ -- fixIO
+ 
+@@ -380,6 +388,8 @@
+ fixIO m         = stToIO (fixST (ioToST . m))
+ #endif
+ 
++#ifndef STANDALONE
++
+ -- $locking
+ -- Implementations should enforce as far as possible, at least locally to the
+ -- Haskell process, multiple-reader single-writer locking on files.
+@@ -398,3 +408,5 @@
+ -- It follows that an attempt to write to a file (using 'writeFile', for
+ -- example) that was earlier opened by 'readFile' will usually result in
+ -- failure with 'isAlreadyInUseError'.
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/Posix/Internals.hs ghc-6.2/libraries/base/System/Posix/Internals.hs
+--- ghc-6.2.orig/libraries/base/System/Posix/Internals.hs	2003-11-19 11:04:33.000000000 +0100
++++ ghc-6.2/libraries/base/System/Posix/Internals.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -21,6 +21,8 @@
+ -- #hide
+ module System.Posix.Internals where
+ 
++#ifndef STANDALONE
++
+ #include "config.h"
+ 
+ import Control.Monad
+@@ -504,3 +506,5 @@
+ s_issock :: CMode -> Bool
+ s_issock cmode = False
+ #endif
++
++#endif /* !STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/System/Posix/Signals.hsc ghc-6.2/libraries/base/System/Posix/Signals.hsc
+--- ghc-6.2.orig/libraries/base/System/Posix/Signals.hsc	2003-10-20 12:13:17.000000000 +0200
++++ ghc-6.2/libraries/base/System/Posix/Signals.hsc	2004-02-27 15:33:05.000000000 +0100
+@@ -15,7 +15,7 @@
+ #include "config.h"
+ 
+ module System.Posix.Signals (
+-#ifndef mingw32_TARGET_OS
++#if !defined(mingw32_TARGET_OS) && !defined(STANDALONE)
+   -- * The Signal type
+   Signal,
+ 
+@@ -95,7 +95,7 @@
+ import System.Posix.Types
+ import System.Posix.Internals
+ 
+-#ifndef mingw32_TARGET_OS
++#if !defined(mingw32_TARGET_OS) && !defined(STANDALONE)
+ -- WHOLE FILE...
+ 
+ -- -----------------------------------------------------------------------------
+@@ -438,5 +438,5 @@
+ foreign import ccall unsafe "__hsposix_SIG_SETMASK" c_SIG_SETMASK :: CInt
+ foreign import ccall unsafe "__hsposix_SIG_UNBLOCK" c_SIG_UNBLOCK :: CInt
+ 
+-#endif /* mingw32_TARGET_OS */
++#endif /* !mingw32_TARGET_OS && !STANDALONE */
+ 
+diff -urN ghc-6.2.orig/libraries/base/System/Posix/Types.hs ghc-6.2/libraries/base/System/Posix/Types.hs
+--- ghc-6.2.orig/libraries/base/System/Posix/Types.hs	2003-10-20 12:57:43.000000000 +0200
++++ ghc-6.2/libraries/base/System/Posix/Types.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -17,6 +17,7 @@
+ #include "config.h"
+ 
+ module System.Posix.Types (
++#ifndef STANDALONE
+ 
+   -- * POSIX data types
+ #if defined(HTYPE_DEV_T)
+@@ -82,8 +83,11 @@
+   FileID,
+   FileMode,
+   Limit
++#endif
+  ) where
+ 
++#ifndef STANDALONE
++
+ import Foreign
+ import Foreign.C
+ import Data.Typeable
+@@ -179,3 +183,5 @@
+ type ProcessGroupID = CPid
+ type Limit	    = CLong
+ 
++#endif
++
+diff -urN ghc-6.2.orig/libraries/base/System/Random.hs ghc-6.2/libraries/base/System/Random.hs
+--- ghc-6.2.orig/libraries/base/System/Random.hs	2003-11-26 11:02:19.000000000 +0100
++++ ghc-6.2/libraries/base/System/Random.hs	2004-02-27 15:33:05.000000000 +0100
+@@ -14,6 +14,7 @@
+ 
+ module System.Random
+ 	(
++#ifndef STANDALONE
+ 
+ 	-- $intro
+ 
+@@ -40,8 +41,11 @@
+ 	-- * References
+ 	-- $references
+ 
++#endif
+ 	) where
+ 
++#ifndef STANDALONE
++
+ import Prelude
+ 
+ #ifdef __NHC__
+@@ -420,3 +424,5 @@
+ The Web site <http://random.mat.sbg.ac.at/> is a great source of information.
+ 
+ -}
++
++#endif
+diff -urN ghc-6.2.orig/libraries/base/System/Time.hsc ghc-6.2/libraries/base/System/Time.hsc
+--- ghc-6.2.orig/libraries/base/System/Time.hsc	2003-08-26 22:41:46.000000000 +0200
++++ ghc-6.2/libraries/base/System/Time.hsc	2004-02-27 15:33:05.000000000 +0100
+@@ -69,6 +69,7 @@
+ 
+ module System.Time
+      (
++#ifndef STANDALONE
+         Month(..)
+      ,  Day(..)
+ 
+@@ -93,9 +94,11 @@
+      ,  toClockTime
+      ,  calendarTimeToString
+      ,  formatCalendarTime
+-
++#endif
+      ) where
+ 
++#ifndef STANDALONE
++
+ #ifndef __HUGS__
+ #include "HsBase.h"
+ #endif
+@@ -308,7 +311,7 @@
+         , tdSec   = diffSecs
+         }
+ 
+-#ifndef __HUGS__
++#if !defined(__HUGS__) && !defined(STANDALONE)
+ -- -----------------------------------------------------------------------------
+ -- How do we deal with timezones on this architecture?
+ 
+@@ -368,7 +371,7 @@
+   return (- (if dst then (fromIntegral tz - 3600) else tz))
+ # endif /* ! HAVE_DECL_ALTZONE */
+ #endif  /* ! HAVE_TM_ZONE */
+-#endif /* ! __HUGS__ */
++#endif /* ! __HUGS__ && ! STANDALONE */
+ 
+ -- -----------------------------------------------------------------------------
+ -- toCalendarTime t converts t to a local time, modified by
+@@ -396,7 +399,7 @@
+ toUTCTime      =  unsafePerformIO . clockToCalendarTime_static gmtime True
+ #endif
+ 
+-#ifdef __HUGS__
++#if defined(__HUGS__) || defined(STANDALONE)
+ toCalTime :: Bool -> ClockTime -> IO CalendarTime
+ toCalTime toUTC (TOD s psecs)
+   | (s > fromIntegral (maxBound :: Int)) || 
+@@ -419,7 +422,7 @@
+ 		        , ctTZ=(if toUTC then 0 else off)
+ 		        , ctIsDST=not toUTC && (isdst/=0)
+ 		        })
+-#else /* ! __HUGS__ */
++#else /* ! __HUGS__ && ! STANDALONE */
+ throwAwayReturnPointer :: (Ptr CTime -> Ptr CTm -> IO (Ptr CTm))
+                        -> (Ptr CTime -> Ptr CTm -> IO (       ))
+ throwAwayReturnPointer fun x y = fun x y >> return ()
+@@ -474,13 +477,13 @@
+ #endif /* ! __HUGS__ */
+ 
+ toClockTime :: CalendarTime -> ClockTime
+-#ifdef __HUGS__
++#if defined(__HUGS__) || defined(STANDALONE)
+ toClockTime (CalendarTime yr mon mday hour min sec psec
+ 			  _wday _yday _tzname tz _isdst) =
+   unsafePerformIO $ do
+     s <- toClockTimePrim (yr-1900) (fromEnum mon) mday hour min sec tz
+     return (TOD (fromIntegral s) psec)
+-#else /* ! __HUGS__ */
++#else /* ! __HUGS__ && ! STANDALONE */
+ toClockTime (CalendarTime year mon mday hour min sec psec 
+ 			  _wday _yday _tzname tz isdst) =
+ 
+@@ -697,3 +700,5 @@
+ #endif
+ #endif
+ #endif /* ! __HUGS__ */
++
++#endif
+diff -urN ghc-6.2.orig/libraries/base/cbits/dirUtils.c ghc-6.2/libraries/base/cbits/dirUtils.c
+--- ghc-6.2.orig/libraries/base/cbits/dirUtils.c	2003-11-05 11:00:35.000000000 +0100
++++ ghc-6.2/libraries/base/cbits/dirUtils.c	2004-02-27 15:33:05.000000000 +0100
+@@ -6,6 +6,8 @@
+ 
+ #include "config.h"
+ 
++#ifndef STANDALONE
++
+ // The following is required on Solaris to force the POSIX versions of
+ // the various _r functions instead of the Solaris versions.
+ #ifdef solaris2_TARGET_OS
+@@ -172,3 +174,4 @@
+ #endif
+ }
+ 
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/cbits/errno.c ghc-6.2/libraries/base/cbits/errno.c
+--- ghc-6.2.orig/libraries/base/cbits/errno.c	2002-09-25 17:24:07.000000000 +0200
++++ ghc-6.2/libraries/base/cbits/errno.c	2004-02-27 15:33:05.000000000 +0100
+@@ -6,6 +6,8 @@
+  * GHC Error Number Conversion
+  */
+ 
++#ifndef STANDALONE
++
+ #include "HsBase.h"
+ 
+ /* Raw errno */
+@@ -14,3 +16,5 @@
+ int *ghcErrno(void) {
+   return &errno;
+ }
++
++#endif
+diff -urN ghc-6.2.orig/libraries/base/cbits/inputReady.c ghc-6.2/libraries/base/cbits/inputReady.c
+--- ghc-6.2.orig/libraries/base/cbits/inputReady.c	2003-09-03 12:49:19.000000000 +0200
++++ ghc-6.2/libraries/base/cbits/inputReady.c	2004-02-27 15:33:05.000000000 +0100
+@@ -4,6 +4,8 @@
+  * hWaitForInput Runtime Support
+  */
+ 
++#ifndef STANDALONE
++
+ /* select and supporting types is not Posix */
+ /* #include "PosixSource.h" */
+ #include "HsBase.h"
+@@ -64,3 +66,5 @@
+     }
+ #endif
+ }    
++
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/cbits/lockFile.c ghc-6.2/libraries/base/cbits/lockFile.c
+--- ghc-6.2.orig/libraries/base/cbits/lockFile.c	2002-02-07 12:13:30.000000000 +0100
++++ ghc-6.2/libraries/base/cbits/lockFile.c	2004-02-27 15:33:05.000000000 +0100
+@@ -6,6 +6,8 @@
+  * stdin/stout/stderr Runtime Support
+  */
+ 
++#ifndef STANDALONE
++
+ #include "HsBase.h"
+ 
+ #ifndef FD_SETSIZE
+@@ -126,3 +128,5 @@
+      /* Signal that we did not find an entry */
+     return 1;
+ }
++
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/cbits/rawSystem.c ghc-6.2/libraries/base/cbits/rawSystem.c
+--- ghc-6.2.orig/libraries/base/cbits/rawSystem.c	2003-06-18 10:06:00.000000000 +0200
++++ ghc-6.2/libraries/base/cbits/rawSystem.c	2004-02-27 15:33:05.000000000 +0100
+@@ -4,6 +4,8 @@
+  * shell-less system Runtime Support (see System.Cmd.rawSystem).
+  */
+ 
++#ifndef STANDALONE
++
+ /* The itimer stuff in this module is non-posix */
+ /* #include "PosixSource.h" */
+ 
+@@ -132,3 +134,5 @@
+     return -1;
+ }
+ #endif
++
++#endif /* STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/cbits/system.c ghc-6.2/libraries/base/cbits/system.c
+--- ghc-6.2.orig/libraries/base/cbits/system.c	2003-07-02 15:27:35.000000000 +0200
++++ ghc-6.2/libraries/base/cbits/system.c	2004-02-27 15:33:05.000000000 +0100
+@@ -6,6 +6,8 @@
+  * system Runtime Support
+  */
+ 
++#ifndef STANDALONE
++
+ /* The itimer stuff in this module is non-posix */
+ // #include "PosixSource.h"
+ 
+@@ -78,3 +80,5 @@
+     return -1;
+ #endif
+ }
++
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/base/cbits/writeError.c ghc-6.2/libraries/base/cbits/writeError.c
+--- ghc-6.2.orig/libraries/base/cbits/writeError.c	2002-02-07 12:13:30.000000000 +0100
++++ ghc-6.2/libraries/base/cbits/writeError.c	2004-05-21 20:36:38.000000000 +0200
+@@ -37,9 +37,11 @@
+   }
+ 
+   while ( (count = write(2,p,len)) < len) {
++#ifndef STANDALONE
+      if (errno != EINTR ) {
+         return;
+      }
++#endif
+      len -= count;
+      p   += count;
+   }
+diff -urN ghc-6.2.orig/libraries/base/include/HsBase.h ghc-6.2/libraries/base/include/HsBase.h
+--- ghc-6.2.orig/libraries/base/include/HsBase.h	2003-11-19 11:04:25.000000000 +0100
++++ ghc-6.2/libraries/base/include/HsBase.h	2004-02-27 15:33:05.000000000 +0100
+@@ -12,9 +12,22 @@
+ #include "config.h"
+ #include "HsFFI.h"
+ 
++#include <math.h>
++
++#if HAVE_LIMITS_H
++#include <limits.h>
++#endif
++#if HAVE_STRING_H
++#include <string.h>
++#endif
++#if HAVE_WCTYPE_H
++#include <wctype.h>
++#endif
++
++#ifndef STANDALONE
++
+ #include <stdio.h>
+ #include <stdlib.h>
+-#include <math.h>
+ 
+ #if HAVE_SYS_TYPES_H
+ #include <sys/types.h>
+@@ -42,9 +55,6 @@
+ #if HAVE_ERRNO_H
+ #include <errno.h>
+ #endif
+-#if HAVE_STRING_H
+-#include <string.h>
+-#endif
+ #if HAVE_DIRENT_H
+ #include <dirent.h>
+ #endif
+@@ -79,12 +89,6 @@
+ #if HAVE_WINSOCK_H && defined(__MINGW32__)
+ #include <winsock.h>
+ #endif
+-#if HAVE_LIMITS_H
+-#include <limits.h>
+-#endif
+-#if HAVE_WCTYPE_H
+-#include <wctype.h>
+-#endif
+ 
+ #if !defined(mingw32_TARGET_OS) && !defined(irix_TARGET_OS)
+ # if HAVE_SYS_RESOURCE_H
+@@ -136,6 +140,8 @@
+ /* in Signals.c */
+ extern HsInt nocldstop;
+ 
++#endif
++
+ /* -----------------------------------------------------------------------------
+    64-bit operations, defined in longlong.c
+    -------------------------------------------------------------------------- */
+@@ -202,6 +208,8 @@
+ #define INLINE extern inline
+ #endif
+ 
++#ifndef STANDALONE
++
+ INLINE int __hscore_s_isreg(m)  { return S_ISREG(m);  }
+ INLINE int __hscore_s_isdir(m)  { return S_ISDIR(m);  }
+ INLINE int __hscore_s_isfifo(m) { return S_ISFIFO(m); }
+@@ -662,5 +670,7 @@
+ INLINE int __hsposix_SIG_SETMASK() { return SIG_SETMASK; }
+ #endif /* mingw32_TARGET_OS */
+ 
++#endif /* !STANDALONE */
++
+ #endif /* __HSBASE_H__ */
+ 
+diff -u -r ghc-6.2.orig/libraries/base/Makefile ghc-6.2/libraries/base/Makefile
+--- ghc-6.2.orig/libraries/base/Makefile	2003-11-20 10:03:36.000000000 +0000
++++ ghc-6.2/libraries/base/Makefile	2004-02-19 18:19:59.000000000 +0000
+@@ -19,12 +19,12 @@
+ 	Foreign \
+ 	Foreign/C \
+ 	Foreign/Marshal \
+-	GHC \
+ 	System \
+ 	System/Console \
+ 	System/Mem \
+ 	System/IO \
+ 	System/Posix \
++	GHC \
+ 	Text \
+ 	Text/Html \
+ 	Text/PrettyPrint \
+@@ -73,11 +73,11 @@
+ 
+ # -----------------------------------------------------------------------------
+ 
+-STUBOBJS += \
+-   Control/Concurrent_stub.$(way_)o
++# STUBOBJS += \
++#    Control/Concurrent_stub.$(way_)o
+    
+-CLEAN_FILES += $(STUBOBJS) \
+-   Control/Concurrent_stub.[ch]
++# CLEAN_FILES += $(STUBOBJS) \
++#    Control/Concurrent_stub.[ch]
+ 
+ #-----------------------------------------------------------------------------
+ # 	Building the library for GHCi
+diff -urN ghc-6.2.orig/libraries/haskell98/CPUTime.hs ghc-6.2/libraries/haskell98/CPUTime.hs
+--- ghc-6.2.orig/libraries/haskell98/CPUTime.hs	2002-08-12 12:13:09.000000000 +0200
++++ ghc-6.2/libraries/haskell98/CPUTime.hs	2004-03-05 16:03:05.000000000 +0100
+@@ -1,5 +1,9 @@
+ module CPUTime (
++#ifndef STANDALONE
+     getCPUTime, cpuTimePrecision 
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.CPUTime
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/haskell98/Directory.hs ghc-6.2/libraries/haskell98/Directory.hs
+--- ghc-6.2.orig/libraries/haskell98/Directory.hs	2002-08-12 12:13:09.000000000 +0200
++++ ghc-6.2/libraries/haskell98/Directory.hs	2004-03-05 16:05:49.000000000 +0100
+@@ -1,4 +1,5 @@
+ module Directory (
++#ifndef STANDALONE
+     Permissions( Permissions, readable, writable, executable, searchable ), 
+     createDirectory, removeDirectory, removeFile, 
+     renameDirectory, renameFile, getDirectoryContents,
+@@ -6,6 +7,9 @@
+     doesFileExist, doesDirectoryExist,
+     getPermissions, setPermissions,
+     getModificationTime 
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.Directory
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/haskell98/IO.hs ghc-6.2/libraries/haskell98/IO.hs
+--- ghc-6.2.orig/libraries/haskell98/IO.hs	2002-12-12 14:42:47.000000000 +0100
++++ ghc-6.2/libraries/haskell98/IO.hs	2004-03-05 16:10:14.000000000 +0100
+@@ -1,4 +1,5 @@
+ module IO (
++#ifndef STANDALONE
+     Handle, HandlePosn,
+     IOMode(ReadMode,WriteMode,AppendMode,ReadWriteMode),
+     BufferMode(NoBuffering,LineBuffering,BlockBuffering),
+@@ -20,8 +21,11 @@
+     IO, FilePath, IOError, ioError, userError, catch, interact,
+     putChar, putStr, putStrLn, print, getChar, getLine, getContents,
+     readFile, writeFile, appendFile, readIO, readLn
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
++
+ import System.IO
+ 
+ -- | The 'bracket' function captures a common allocate, compute, deallocate
+@@ -55,3 +59,5 @@
+          case rs of
+             Right r -> return r
+             Left  e -> ioError e
++
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/haskell98/Makefile ghc-6.2/libraries/haskell98/Makefile
+--- ghc-6.2.orig/libraries/haskell98/Makefile	2003-11-20 11:03:45.000000000 +0100
++++ ghc-6.2/libraries/haskell98/Makefile	2004-03-05 16:04:30.000000000 +0100
+@@ -8,6 +8,7 @@
+ PACKAGE      = haskell98
+ PACKAGE_DEPS = base
+ 
++SRC_HC_OPTS += -cpp
+ SRC_HADDOCK_OPTS += -t "Haskell Hierarchical Libraries ($(PACKAGE) package)"
+ 
+ include $(TOP)/mk/target.mk
+diff -urN ghc-6.2.orig/libraries/haskell98/MarshalError.hs ghc-6.2/libraries/haskell98/MarshalError.hs
+--- ghc-6.2.orig/libraries/haskell98/MarshalError.hs	2002-12-05 10:50:01.000000000 +0100
++++ ghc-6.2/libraries/haskell98/MarshalError.hs	2004-03-05 16:12:01.000000000 +0100
+@@ -1,5 +1,6 @@
+ module MarshalError (
+   	module Foreign.Marshal.Error,
++#ifndef STANDALONE
+ 	IOErrorType,
+ 	mkIOError,
+ 	alreadyExistsErrorType,
+@@ -11,7 +12,10 @@
+ 	permissionErrorType,
+ 	userErrorType,
+ 	annotateIOError
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.IO.Error
++#endif /* ! STANDALONE */
+ import Foreign.Marshal.Error
+diff -urN ghc-6.2.orig/libraries/haskell98/Random.hs ghc-6.2/libraries/haskell98/Random.hs
+--- ghc-6.2.orig/libraries/haskell98/Random.hs	2002-08-12 12:13:09.000000000 +0200
++++ ghc-6.2/libraries/haskell98/Random.hs	2004-03-05 16:12:40.000000000 +0100
+@@ -1,8 +1,12 @@
+ module Random (
++#ifndef STANDALONE
+    RandomGen(next, split, genRange),
+    StdGen, mkStdGen,
+    Random( random,   randomR, randoms,  randomRs, randomIO, randomRIO ),
+    getStdRandom, getStdGen, setStdGen, newStdGen
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.Random
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/haskell98/System.hs ghc-6.2/libraries/haskell98/System.hs
+--- ghc-6.2.orig/libraries/haskell98/System.hs	2002-08-12 12:13:10.000000000 +0200
++++ ghc-6.2/libraries/haskell98/System.hs	2004-03-05 16:13:14.000000000 +0100
+@@ -1,8 +1,12 @@
+ module System (
++#ifndef STANDALONE
+     ExitCode(ExitSuccess,ExitFailure),
+     getArgs, getProgName, getEnv, system, exitWith, exitFailure
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.Exit
+ import System.Environment
+ import System.Cmd
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/libraries/haskell98/Time.hs ghc-6.2/libraries/haskell98/Time.hs
+--- ghc-6.2.orig/libraries/haskell98/Time.hs	2002-12-04 18:22:29.000000000 +0100
++++ ghc-6.2/libraries/haskell98/Time.hs	2004-03-05 16:14:07.000000000 +0100
+@@ -1,4 +1,5 @@
+ module Time (
++#ifndef STANDALONE
+     ClockTime, 
+     Month(January,February,March,April,May,June,
+           July,August,September,October,November,December),
+@@ -10,6 +11,9 @@
+     getClockTime, addToClockTime, diffClockTimes,
+     toCalendarTime, toUTCTime, toClockTime,
+     calendarTimeToString, formatCalendarTime 
++#endif /* ! STANDALONE */
+   ) where
+ 
++#ifndef STANDALONE
+ import System.Time
++#endif /* ! STANDALONE */
+diff -urN ghc-6.2.orig/mk/config.h.in ghc-6.2/mk/config.h.in
+--- ghc-6.2.orig/mk/config.h.in	2003-12-15 20:40:16.000000000 +0100
++++ ghc-6.2/mk/config.h.in	2004-02-27 15:33:05.000000000 +0100
+@@ -1067,6 +1067,9 @@
+         STACK_DIRECTION = 0 => direction of growth unknown */
+ #undef STACK_DIRECTION
+ 
++/* Define to 1 for standalone RTS. */
++#undef STANDALONE
++
+ /* Define to 1 if you have the ANSI C header files. */
+ #undef STDC_HEADERS
+ 
+diff -urN ghc-6.2.orig/mk/config.mk.in ghc-6.2/mk/config.mk.in
+--- ghc-6.2.orig/mk/config.mk.in	2003-11-20 11:09:42.000000000 +0100
++++ ghc-6.2/mk/config.mk.in	2004-05-21 19:01:39.000000000 +0200
+@@ -361,6 +361,8 @@
+ # 
+ GhcRtsThreaded=@ThreadedRts@
+ 
++GhcRtsStandalone=@StandaloneRts@
++
+ ################################################################################
+ #
+ # libraries project

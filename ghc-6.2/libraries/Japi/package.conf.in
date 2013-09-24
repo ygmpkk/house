@@ -1,0 +1,29 @@
+#include "config.h"
+
+Package {
+        name           = "japi",
+#ifdef INSTALLING
+	import_dirs    = [ "$libdir/imports" ],
+#else
+	import_dirs    = [ "$libdir/libraries/Japi" ],
+#endif
+        source_dirs    = [],
+#ifdef INSTALLING
+        library_dirs   = [ "$libdir" ],
+#else
+        library_dirs   = [ "$libdir/libraries/Japi" ],
+#endif
+        hs_libraries    = [ "HSjapi" ],
+	extra_libraries =
+		       ["japi"],
+#ifdef INSTALLING
+        include_dirs   = [],
+#else
+        include_dirs   = [ ],
+#endif
+        c_includes     = [ ],
+        package_deps   = [ "base" ],
+        extra_ghc_opts = [],
+        extra_cc_opts  = [],
+        extra_ld_opts  = []
+}

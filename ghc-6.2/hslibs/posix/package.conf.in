@@ -1,0 +1,36 @@
+#include "config.h"
+
+Package {
+	name           = "posix",
+#ifdef INSTALLING
+	import_dirs    = [ "$libdir/hslibs-imports/posix" ],
+#else
+	import_dirs    = [ "$libdir/hslibs/posix" ],
+#endif
+	source_dirs    = [],
+#ifdef INSTALLING
+	library_dirs   = [ "$libdir" ],
+#else
+	library_dirs   = [ "$libdir/hslibs/posix"
+                         , "$libdir/hslibs/posix/cbits" ],
+#endif
+	hs_libraries    = [ "HSposix" ],
+	extra_libraries = [ "HSposix_cbits"
+#ifndef HAVE_FRAMEWORK_HASKELLSUPPORT
+#ifdef HAVE_LIBDL
+			  , "dl"
+#endif
+#endif
+			  ],
+#ifdef INSTALLING
+	include_dirs	= [],
+#else
+	include_dirs	= [ "$libdir/hslibs/posix/cbits" ],
+#endif
+         c_includes     = [ "HsPosix.h" ],
+         package_deps   = [ "lang", "unix" ],
+         extra_ghc_opts = [],
+         extra_cc_opts  = [],
+         extra_ld_opts  = []
+}
+

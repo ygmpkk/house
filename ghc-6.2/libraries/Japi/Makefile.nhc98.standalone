@@ -1,0 +1,49 @@
+# -----------------------------------------------------------------------------=
+#
+# (c) The GHC Team 2003
+#
+
+
+HC = nhc98
+
+EXTRA_LIBS =  -ljapi -lws2_32
+
+# HCOPTS = -package japi -O
+HCOPTS =  -package base -I. -L. Graphics/UI/Japi/Types.hs Graphics/UI/Japi/Constants.hs Graphics/UI/Japi/Binding.hs $(EXTRA_LIBS)
+
+all: japi mandel2 canvas rubberband frame alert componentlistener borderpanel daemon
+
+japi: types constants binding
+
+types: Graphics/UI/Japi/Types.hs
+	$(HC) -c Graphics/UI/Japi/Types.hs
+constants: Graphics/UI/Japi/Constants.hs
+	$(HC) -c Graphics/UI/Japi/Constants.hs
+binding: Graphics/UI/Japi/Binding.hs
+	$(HC) -c Graphics/UI/Japi/Binding.hs
+
+mandel2: japi examples/mandel2.hs
+	$(HC) $(HCOPTS) examples/mandel2.hs -o examples/mandel2
+canvas: japi examples/canvas.hs
+	$(HC) $(HCOPTS) examples/canvas.hs -o examples/canvas
+rubberband: japi examples/rubberband.hs
+	$(HC) $(HCOPTS) examples/rubberband.hs -o examples/rubberband
+frame: japi examples/frame.hs
+	$(HC) $(HCOPTS) examples/frame.hs -o examples/frame
+alert: japi examples/alert.hs
+	$(HC) $(HCOPTS) examples/alert.hs -o examples/alert
+componentlistener: japi examples/componentlistener.hs
+	$(HC) $(HCOPTS) examples/componentlistener.hs -o examples/componentlistener
+borderpanel: japi examples/borderpanel.hs
+	$(HC) $(HCOPTS) examples/borderpanel.hs -o examples/borderpanel
+daemon: japi examples/daemon.hs
+	$(HC) $(HCOPTS) examples/daemon.hs -o examples/daemon
+
+clean:
+	find . -iname "*.hi" -exec rm \{\} \;
+	find . -iname "*.o" -exec rm \{\} \;
+	find . -iname "*.exe" -exec rm \{\} \;
+
+
+
+

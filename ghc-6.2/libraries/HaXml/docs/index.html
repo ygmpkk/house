@@ -1,0 +1,277 @@
+<html>
+<head>
+<title>
+  HaXml: Haskell and XML
+</title>
+</head>
+
+<body bgcolor='#ffffff'>
+
+<center>
+<h1>HaXml</h1>
+<table><tr><td width=200 align=center>
+<a href="#what">What is HaXml?</a><br>
+<a href="#how">How do I use it?</a><br>
+<a href="#download">Downloads</a><br>
+</td><td width=200 align=center>
+<a href="#news">Recent news</a><br>
+<a href="#who">Contacts</a><br>
+<a href="#related">Related Work</a><br>
+</td></tr></table>
+</center>
+<hr>
+
+<center><h3><a name="what">What is HaXml?</a></h3></center>
+<p>
+<b>HaXml</b> is a collection of utilities for using
+<a href="http://www.haskell.org">Haskell</a> and
+<a href="http://www.w3.org/TR/REC-xml">XML</a>
+together.  Its basic facilities include:
+
+<ul>
+<li> a parser for XML,
+<li> a separate error-correcting parser for HTML,
+<li> an XML validator,
+<li> pretty-printers for XML and HTML.
+</ul>
+
+<p>
+For processing XML documents, the following components are provided:
+<ul>
+<li><em>Combinators</em> is a combinator library for generic XML document
+    processing, including transformation, editing, and generation.
+<li><em>Haskell2Xml</em> is a replacement class for Haskell's Show/Read
+    classes: it allows you to read and write ordinary Haskell data as XML
+    documents.  The <em>DrIFT</em> tool (available from
+    <a href="http://repetae.net/~john/computer/haskell/DrIFT/">
+    <tt>http://repetae.net/~john/computer/haskell/DrIFT/</tt></a>)
+    can automatically derive this class for you.
+<li><em>DtdToHaskell</em> is a tool for translating any valid XML DTD
+    into equivalent Haskell types.
+<li>In conjunction with the <em>Xml2Haskell</em> class framework,
+    this allows you to generate, edit, and transform documents as normal
+    typed values in programs, and to read and write them as human-readable
+    XML documents.
+<li>Finally, <em>Xtract</em> is a <em>grep</em>-like tool for XML documents,
+    loosely based on the XPath and XQL query languages.  It can be used
+    either from the command-line, or within your own code as part of the
+    library.
+</ul>
+
+<hr>
+<center><h3><a name="how">How do I use it?</a></h3></center>
+<p>
+<a href="HaXml/index.html">Detailed documentation of the HaXml APIs</a>
+is generated automatically by Haddock directly from the source code.
+
+<p>
+An introduction to HaXml for people who know more about XML than
+about Haskell can be found at
+<a href="http://www-106.ibm.com/developerworks/xml/library/x-matters14.html">
+IBM DeveloperWorks</a>.
+
+<p>
+A paper describing and comparing the generic Combinators with
+the typed representation (DtdToHaskell/Xml2Haskell) is available here:
+(12 pages of double-column A4)
+<ul>
+<li> <a href="icfp99.dvi">icfp99.dvi</a>     (LaTeX dvi format)
+<li> <a href="icfp99.ps.gz">icfp99.ps.gz</a> (PostScript format - gzipped)
+<li> <a href="icfp99.html">icfp99.html</a>   (HTML format)
+</ul>
+
+<p>
+Some additional info about using the various facilities is here:
+<ul>
+<li> <a href="Combinators.html">Combinators</a>       (HTML format)
+<li> <a href="Haskell2Xml.html">Haskell2Xml class</a> (HTML format)
+<li> <a href="Xml2Haskell.html">DtdToHaskell tool</a> (HTML format)
+<li> <a href="Xtract.html">Xtract tool</a>            (HTML format)
+</ul>
+
+<p>
+<b>Known problems:</b>
+<ul>
+<li> To use <em>-package HaXml</em> interactively with GHCi, you need
+     at least ghci-5.02.3.
+<li> Haskell2Xml generates Parameter Entity Declarations in the internal
+     subset of the DTD, which don't conform to the strict well-formedness
+     conditions of XML.  We think the constraint in question is spurious,
+     and any reasonable XML tool ought to deal adequately with full PEs.
+     Nevertheless, many standard XML processors reject these auto-generated
+     DTDs.  The solution is easy - just move the DTD into a separate file!
+<li> DtdToHaskell generates the Haskell String type for DTD attributes
+     that are of Tokenized or Notation Types in XML.  This may not be
+     entirely accurate.
+</ul>
+
+<hr>
+<center><h3><a name="downloads">Downloads</a></h3></center>
+<p>
+<b>Current version:</b>
+HaXml-1.09, release date 2003.05.30<br>
+By HTTP:
+<a href="http://www.haskell.org/HaXml/HaXml-1.09.tar.gz">.tar.gz</a>,
+<a href="http://www.haskell.org/HaXml/HaXml-1.09.zip">.zip</a>.
+<br>
+By FTP: 
+<a href="ftp://ftp.cs.york.ac.uk/pub/haskell/HaXml/">
+ftp://ftp.cs.york.ac.uk/pub/haskell/HaXml/</a>
+<br>
+FreeBSD port:
+<a href="http://freshports.org/textproc/haxml/">
+http://freshports.org/textproc/haxml/</a>
+
+<p>
+<b>Development version:</b>
+The development version of HaXml is available by anonymous CVS
+(write-access is also available to core Haskell developers).  Read the
+instructions for getting ghc by CVS:
+<a href="http://haskell.org/ghc/docs/latest/html/building/sec-cvs.html">
+http://haskell.org/ghc/docs/latest/html/building/sec-cvs.html</a>
+and simply replace the project name <em>fpconfig</em> with <em>HaXml</em>.
+
+<p>
+<b>Older versions:</b><br>
+By FTP: 
+<a href="ftp://ftp.cs.york.ac.uk/pub/haskell/HaXml/">
+ftp://ftp.cs.york.ac.uk/pub/haskell/HaXml/</a>
+
+<center><h3><a name="install">Installation</a></h3></center>
+<p>
+To install HaXml, you must have a Haskell compiler: <em>ghc-5.02</em>
+or later, and/or <em>nhc98-1.14/hmake-3.06</em> or later.  HaXml-1.09
+has not been tested with recent versions of Hugs (we last tested at
+HaXml-1.05, and would like some advice and help on how things work
+with the newest versions of Hugs).  Use
+
+<pre>
+    ./configure [--prefix=...]
+    make
+    make install
+</pre>
+to configure, build, and install HaXml as a package for your
+compiler(s).  Afterwards, to gain access to the HaXml libraries,
+you only need to add the option <tt>-package HaXml</tt> to your
+compiler commandline.  Various stand-alone tools are also built -
+DtdToHaskell, Xtract, Validate, MkOneOf - and copied to your final
+preferred installation location, specified by the <tt>--prefix=...</tt>
+option to <tt>configure</tt>.
+
+<hr>
+<center><h3><a name="news">Recent news</a></h3></center>
+<p>
+The latest version (1.09) has the following fixes:<br>
+<ul>
+<li> <em>ghc-6.0</em> is supported.
+<li> <em>hmake</em> is no longer required to build HaXml, provided you 
+     have <em>ghc --make</em>.
+<li> A new combinator <tt>path</tt> has been added to
+     Text.XML.HaXml.Combinators, allowing queries to be expressed in the
+     style of XPath.
+<li> Some of the signatures in Text.XML.HaXml.Xml2Haskell have changed,
+     in particular, there are new functions <tt>readXml</tt> and
+     <tt>showXml</tt> that convert to/from Strings, <tt>hGetXml</tt> and
+     <tt>hPutXml</tt> that use file Handles, and the old functions that
+     use filenames are renamed to <tt>fReadXml</tt> and <tt>fWriteXml</tt>.
+<li> DtdToHaskell previously generated incorrect code for reading an XML
+     element given the following DTD fragment:
+     <pre>&lt;!ELEMENT foo (a,b)+ &gt;</pre>
+<li> The parser had a fault when reading conditional sections nested inside an
+     IGNORE section in a DTD.
+<li> In Text.XML.HaXml.Html.Generate, all functions now generate HTML tags
+     in lower-case rather than upper-case, to conform to the XHTML standard.
+<li> DtdToHaskell now accepts NOTATION types for attributes.  They are
+     treated just like enumeration types.
+<li> If you give an output filename as a command-line argument to DtdToHaskell,
+     it now uses the filename as the basis for the generated module name.
+<li> Fixed a configuration bug on the Cygwin platform with ghc-5.04.x.
+<li> <em>make install</em> now places the executables (DtdToHaskell, Xtract,
+     Validate, MkOneOf, Canonicalise) into the directory specified by
+     <tt>./configure --prefix=...</tt>
+</ul>
+
+
+<p>
+The previous version (1.08) had the following new features:<br>
+<ul>
+<li> A new and highly useful function, Text.XML.HaXml.Validate.partialValidate,
+     does validation except for checking whether the root element type matches
+     that of the DTD's root element.  This is just what you need in order to
+     validate any partial document or sub-document.
+<li> The function Text.XML.HaXml.Html.Generate.htmlprint had a little
+     bug which caused it to loop infinitely if some text was longer
+     than 60 characters without a space.
+<li> The Xtract parser and combinators are now included in the HaXml
+     library package, rather than existing solely for the Xtract
+     command-line tool.
+<li> The code generated by DtdToHaskell had a minor cut-and-paste error.
+<li> There were also some simple import naming problems in some of the
+     demonstration files in the examples/ directory.
+<li> The file `script/echo.c' was missing from the distribution.
+     This only affected the configuration step on systems where
+     `echo -n' is not recognised (e.g. Solaris).
+</ul>
+
+<br>
+<a href="changelog.html">Complete Changelog</a><br>
+
+<hr>
+<center><h3><a name="who">Contacts</a></h3></center>
+<p>
+We are interested in hearing your feedback on these XML facilities -
+suggestions for improvements, comments, criticisms, bug reports.  Please mail
+<ul>
+<li>    <a href="mailto:Malcolm.Wallace@cs.york.ac.uk">
+        Malcolm.Wallace@cs.york.ac.uk</a>  (implementation &amp; design)
+</ul>
+
+<p>
+Development of these XML libraries was originally funded by Canon
+Research Europe Ltd..  Subsequent maintenance and development has
+been partially supported by the EPSRC, and the University of York.
+
+<p><b>License:</b> The library is Open Source, i.e., the bits we wrote
+are copyright to us, but freely licensed for your use, modification,
+and re-distribution, provided you don't restrict anyone else's use
+of it.  HaXml is distributed under the Artistic License - see file
+<a href="LICENSE">LICENSE</a> for more details.  (If you don't like the
+licensing conditions, please contact us to discuss your requirements.)
+
+<hr>
+<p>
+<center><h3><a name="related">Related work</a></h3></center>
+<ul>
+<li>Joe English has written a more space-efficient parser for XML
+    in Haskell, called hxml.  What is more, it can be used as a simple
+    drop-in replacement for the HaXml parser!
+    <a href="http://www.flightlab.com/~joe/hxml/">Available here</a>.
+<li>Uwe Schmidt recently designed another
+    <a href="http://www.fh-wedel.de/~si/HXmlToolbox/">Haskell XML Toolbox</a>
+    based on the ideas of HaXml and hxml.
+<li>Some comparisons between functional language approaches to processing
+    XML can be found in
+    <a href="http://www.xml.com/pub/a/2001/02/14/functional.html">
+    Bijan Parsia's article on xml.com</a>
+<li>Christian Lindig has written an XML parser in O'Caml:
+    <a href="http://www.cs.tu-bs.de/softech/people/lindig/software/tony.html">
+    here</a>.
+<li>Andreas Neumann of the University of Trier has written a
+    validating XML parser in Standard ML:
+    <a href="http://www.informatik.uni-trier.de/~neumann/Fxp">here</a>.
+<li>Erik Meijer and Mark Shields have a design for a functional programming
+    language that treats XML documents as basic data types:
+    <a href="http://www.cse.ogi.edu/~mbs/pub/xmlambda">XMLambda</a>.
+<li>Benjamin Pierce and Haruo Hosoya have a different but similar design in
+    <a href="http://xduce.sourceforge.net/">XDuce</a>, which is
+    also implemented.
+<li>Ulf Wiger describes an Erlang toolkit for XML:
+    <a href="http://www.erlang.se/euc/00/">XMerL</a>
+<li>There is a comprehensive reading list for XML and web programming in
+    functional languages <a href="http://readscheme.org/xml-web/">here</a>.
+</ul>
+
+<hr>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+This is an interface to a large part of the Xlib library.
+There are a number of Makefiles here - the result can be rather confusing.
+
+Makefile 
+  Used if building the fptools libraries as part of the GHC build process.
+  Requires that you have proerly configured the entire fptools/hslibs
+  tree.  This is rather a complex business.
+
+Makefile.ffi
+  Used if building with a 'new' version of Hugs.  That is, a version 
+  dated August 2002 or later.
+
+  Typical usage:
+
+    make -fMakefile.ffi
+    make -fMakefile.ffi all
+      Compile the three .gc files generating everything you need for use
+      with Hugs.
+
+    make -fMakefile.ffi X_dir=/usr/local/X11R6
+      Same as above but override the choice of directory to search for
+      libX11.so*
+   
+    make -fMakefile.ffi rerun_GC=yes
+      Same as above but, assumes that 'greencard' is on your path
+      and runs GreenCard first.
+
+      You _must_ do this if you are building from a cvs source tree or
+      similar distribution which lacks files with names like 
+      Xlib_stub_ffi.c
+   
+Makefile.hugs
+  This is a Makefile for use with the December 2001 release of Hugs.
+
+  Typical usage:
+
+    make -fMakefile.hugs system=SunOS X_dir=/usr/local/X11R6
+
+  As with Makefile.ffi, you might have to specify rerun_GC=yes.
+  You will also have to specify where your Hugs installation is
+  (hugs_install=<wherever>) if it is not in /usr/share/hugs98.
+
+Makefile.ghc
+  This is an old Makefile for making Xlib with GHC without using the full
+   GHC bootstrap environment.
+  It is not known whether it works.
+

@@ -1,0 +1,11 @@
+module TcMatches where
+
+tcGRHSsPat    :: RnHsSyn.RenamedGRHSs
+	      -> TcUnify.Expected TcType.TcType
+	      -> TcRnTypes.TcM TcHsSyn.TcGRHSs
+
+tcMatchesFun :: Name.Name
+	     -> [RnHsSyn.RenamedMatch]
+	     -> TcUnify.Expected TcType.TcType
+	     -> TcRnTypes.TcM [TcHsSyn.TcMatch]
+

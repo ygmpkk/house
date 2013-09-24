@@ -1,0 +1,5 @@
+#!/bin/sh
+GHCBIN="/usr/local/lib/ghc-6.2/ghc-6.2";
+TOPDIROPT="-B/usr/local/lib/ghc-6.2";
+# Mini-driver for GHC
+exec $GHCBIN $TOPDIROPT ${1+"$@"}

@@ -1,0 +1,132 @@
+interface DTD_erik where {
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Fractional (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Num (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Real (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.RealFrac (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Enum (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Read a,Prelude.Integral a) => Prelude.Read (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Ord (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Eind;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Begin;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Kenmerk_;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Kenmerk;
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b,Xml2Haskell.XmlContent c) => Xml2Haskell.XmlContent (a,b,c);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b) => Xml2Haskell.XmlContent (a,b);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a) => Xml2Haskell.XmlContent [a];
+
+{-# NEED #-}
+instance Xml2Haskell.XmlAttributes Kenmerk_Attrs;
+
+{-# NEED #-}
+instance Prelude.Eq Eind;
+
+{-# NEED #-}
+instance Prelude.Eq Begin;
+
+{-# NEED #-}
+instance Prelude.Eq Kenmerk_;
+
+{-# NEED #-}
+instance Prelude.Eq Kenmerk_Attrs;
+
+{-# NEED #-}
+instance Prelude.Eq Kenmerk;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Eq (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.AttValue;
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.Reference;
+
+{-# NEED #-}
+instance (Prelude.Eq a) => Prelude.Eq (Xml2Haskell.Defaultable a);
+
+{-# NEED #-}
+instance Prelude.Show Eind;
+
+{-# NEED #-}
+instance Prelude.Show Begin;
+
+{-# NEED #-}
+instance Prelude.Show Kenmerk_;
+
+{-# NEED #-}
+instance Prelude.Show Kenmerk_Attrs;
+
+{-# NEED #-}
+instance Prelude.Show Kenmerk;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Show (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Show a) => Prelude.Show (Xml2Haskell.Defaultable a);
+interface Xml2Haskell
+{-# NEED XmlContent #-}
+class XmlContent a;
+interface XmlTypes
+{-# NEED AttValue #-}
+data AttValue;
+
+{-# NEED Reference #-}
+data Reference;
+interface Ratio
+{-# NEED Ratio #-}
+data (Prelude.Integral a) => Ratio a;
+interface ! DTD_erik
+{-# NEED {Kenmerk Kenmerk} #-}
+data Kenmerk
+  = Kenmerk Kenmerk_Attrs [Kenmerk_];
+
+{-# NEED {Kenmerk_ Kenmerk_Str Kenmerk_Begin Kenmerk_Eind} #-}
+data Kenmerk_
+  = Kenmerk_Str Prelude.String
+  | Kenmerk_Begin Begin
+  | Kenmerk_Eind Eind;
+
+{-# NEED {Eind Eind} #-}
+newtype {-#  #-} Eind
+  = Eind Prelude.String;
+
+{-# NEED {Begin Begin} #-}
+newtype {-#  #-} Begin
+  = Begin [Prelude.String];
+
+{-# NEED {Kenmerk_Attrs Kenmerk_Attrs kenmerkKmc kenmerkGewicht} #-}
+data Kenmerk_Attrs
+  = Kenmerk_Attrs {kenmerkKmc :: Prelude.String} {kenmerkGewicht :: (Xml2Haskell.Defaultable Prelude.String)};
+interface Xml2Haskell
+{-# NEED Defaultable #-}
+data Defaultable a;
+}

@@ -1,0 +1,23 @@
+# DO NOT DELETE: Beginning of C dependencies
+cgprof.o: cgprof.c
+cgprof.o: ../../../includes/config.h
+cgprof.o: daVinci.h
+cgprof.o: symbol.h
+cgprof.o: matrix.h
+cgprof.o: cgprof.h
+daVinci.o: daVinci.c
+daVinci.o: daVinci.h
+daVinci.o: symbol.h
+daVinci.o: matrix.h
+daVinci.o: cgprof.h
+main.o: main.c
+main.o: ../../../includes/config.h
+main.o: symbol.h
+main.o: cgprof.h
+main.o: matrix.h
+main.o: daVinci.h
+matrix.o: matrix.c
+matrix.o: matrix.h
+symbol.o: symbol.c
+symbol.o: symbol.h
+# DO NOT DELETE: End of C dependencies

@@ -1,0 +1,23 @@
+<BookInfo>
+<Title>The Glasgow Haskell Compiler User's Guide, Version 6.2</Title>
+<Author><OtherName>The GHC Team</OtherName></Author>
+<Address>
+<Email>glasgow-haskell-&lcub;bugs,users&rcub;-request@haskell.org</Email>
+</Address>
+</BookInfo>
+
+&license;
+&intro;
+&installing;
+&ghci;
+&using;
+&prof;
+&sooner;
+&lang-features;
+&ffi-chap;
+&wrong;
+&utils;
+&win32-dll;
+&bugs;
+&faq;
+

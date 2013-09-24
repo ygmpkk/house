@@ -1,0 +1,296 @@
+#
+# GHC GNUMakefile for GreenCard-based Win32 library
+#
+
+#== Start of user-serviceable parts
+
+# Whether to assume GreenCard generated files are up to date
+USE_GC=NO
+
+# ghc only: library kinds
+# Legal values: normal, dll , profiled
+LIB_WAYS=normal dll
+
+# Are you building the library optimised or not?
+# Legal values: YES, NO
+LIB_OPTIMISED=YES
+
+
+# Toplevel directory of greencard distribution.
+# If you're using an installed greencard, you'll
+# need to set the GCLIBDIR and GC variables explicitly.
+#
+GCDIR		= ../../../greencard
+GCLIBDIR        = $(GCDIR)/lib/ghc
+GC	    	= $(GCDIR)/src/greencard
+
+GHC    	        = ../../../ghc/driver/ghc-inplace
+HUGSDIR 	= /hugs98
+HUGSSRCDIR      = c:/hugs/src
+RUNHUGS	        = $(HUGSDIR)/runhugs
+FFIHUGS	        = $(HUGSDIR)/ffihugs
+CPP		= gcc -P -E -x c -traditional
+
+#== End of user serviceable parts
+#   (you shouldn't have to edit any of what follows.)
+
+
+all::
+# These specify the input files and some of the intermediate files
+
+SRCS		= $(notdir $(wildcard gc-src/*.gc))
+
+GEN_CFILES 	= $(addsuffix _stub_ffi.c,   $(basename $(SRCS)))
+GEN_HFILES 	= $(addsuffix _stub_ffi.h,   $(basename $(SRCS)))
+GEN_HS		= $(addsuffix .hs,           $(basename $(SRCS)))
+OBJS 		= $(addsuffix .o,            $(basename $(SRCS)))
+
+# Conversion from long format LIB_WAYS list into short format:
+#  normal          -> n
+#  dll             -> dll
+#  profiled        -> p
+SHORT_NORMAL=n
+SHORT_DLL=dll
+SHORT_PROF=p
+SHORT_CONC=mc
+SHORT_PROFCONC=mr
+WAYS=$(subst normal,$(SHORT_NORMAL),\
+     $(subst dll,$(SHORT_DLL),\
+     $(subst profiled,$(SHORT_PROF),\
+     $(LIB_WAYS))))
+
+OBJS		 = $(addsuffix .$(way_)o,  $(basename $(GEN_HS))) errors.o dumpBMP.o WndProc.o diatemp.o finalizers.o
+HI_FILES         = $(addsuffix .$(way_)hi,  $(basename $(GEN_HS)))
+LIBOBJS		 += $(OBJS) $(STUB_OBJS)
+MKDEPENDHS_OPTS += $(foreach way,$(WAYS),-optdep-s -optdep$(way)) $(foreach obj,$(MKDEPENDHS_OBJ_SUFFICES),-optdep-o -optdep$(obj))
+
+
+
+################################################################
+# Programs
+################################################################
+
+RM     	= rm -f
+CP	= cp
+AR     	= ar
+RANLIB 	= ranlib
+CPP	= gcc -P -E -x c -traditional
+CC	= gcc -mno-cygwin 
+#             -mwin32
+ZIP     = zip
+SED     = sed
+MV      = mv
+
+# Use GreenCard compiled with GHC or interpreted by Hugs
+
+################################################################
+
+GC_OPTS		= $(SRC_GC_OPTS) $(EXTRA_GC_OPTS) $($*_GC_OPTS)
+CC_OPTS		= $(SRC_CC_OPTS) $(EXTRA_CC_OPTS) $($*_CC_OPTS)
+
+HC_OPTS		= $(SRC_HC_OPTS) $(EXTRA_HC_OPTS) $($*_HC_OPTS)
+SRC_HC_OPTS     += -H10M -fglasgow-exts -optc-D__GHC__=4
+SRC_HC_OPTS     += -package-name win32
+SRC_HC_OPTS	+= -package lang
+SRC_HC_OPTS	+= "-DBEGIN_GHC_ONLY=-}"
+SRC_HC_OPTS	+= "-DEND_GHC_ONLY={-"
+SRC_HC_OPTS	+= -cpp
+SRC_HC_OPTS	+= -fno-warn-deprecations
+# SRC_HC_OPTS	+= -package greencard
+ifneq "$(DLLized)" "YES"
+SRC_HC_OPTS	+= -static
+endif
+
+Win32Registry_HC_OPTS += -Onot
+ifneq "$(way)" ""
+SRC_HC_OPTS     += -hisuf $(way_)hi
+endif
+
+ifeq "$(LIB_OPTIMISED)" "YES"
+SRC_HC_OPTS         += -O
+Win32Window_HC_OPTS += -H14m
+endif
+
+ifeq "$(way)" "$(SHORT_PROFCONC)"
+SRC_HC_OPTS	+= -prof -concurrent
+MKDEPENDHS_OPTS += -optdep-s -optdeppc
+endif
+
+SRC_GC_OPTS  	+= --target ffi --include-dir $(GCLIBDIR)
+ifeq "$(DEBUG)" "YES"
+SRC_GC_OPTS     += --stub-debug
+SRC_CC_OPTS     += -DDEBUG -O
+SRC_HC_OPTS     += -optc-DWIN32_LIB_DEBUG
+endif
+
+GCPP_OPTS	= -D__GLASGOW_HASKELL__
+SRC_CC_OPTS     += -D__GHC__=4 $(EXTRA_CC_OPTS)
+
+ifeq "$(way)" "$(SHORT_NORMAL)"
+way  :=
+way_ :=
+_way :=
+else
+ifneq "$(way)" ""
+way_		  := $(way)_
+_way		  := _$(way)
+endif
+endif
+
+
+################################################################
+# Suffix rules taken from the GHC users guide
+################################################################
+
+.SUFFIXES	: .gc .lhs .hs .hi .o .c .a
+
+%.$(way_)hi	: %.$(way_)o
+		@:
+
+%.$(way_)o	: %.lhs
+		$(GHC) $(HC_OPTS) -c $< -o $*.$(way_)o -osuf $(way_)o
+
+%.$(way_)o	: %.hs
+		$(GHC) $(HC_OPTS) -c $< -o $*.$(way_)o -osuf $(way_)o
+
+%.o		: %.c
+		$(CC) $(CC_OPTS) -c $<
+
+%_stub.o	: %_stub.c
+		@:
+
+all:: libHSwin32$(_way).a
+
+libHSwin32$(_way).a : $(LIBOBJS)
+		$(RM) $@
+		ar clqs $@ $(LIBOBJS) Win32Dialogue_stub.$(way_)o Win32Window_stub.$(way_)o
+		ranlib $@
+
+ifeq "$(USE_GC)" "YES"
+%_stub_ffi.c %_stub_ffi.h %.hs	: gc-src/%.gc
+		$(GC) $(GC_OPTS) -i gc-src $< -p $*
+endif
+
+.PRECIOUS:	%.gc
+
+
+# This goes first to make it the default
+ifneq "$(way)" ""
+all		:: libHSwin32$(_way).a
+endif
+
+#
+# Dependency generation
+#
+depend :: .depend .depend_hs
+.depend ::
+	perl mkGCDep $(addprefix gc-src/, $(SRCS)) > .depend
+.depend_hs :: $(GEN_HS)
+	$(GHC) -optdep-f -optdep.depend_hs -M $(HC_OPTS) $(GEN_HS)
+
+#
+# Source distributions
+#
+SRC_DIST_DIR=win32
+SRC_DIST_SNAP_NAME=win32-$(shell date +%d%m%y).zip
+H_DIST_FILES=Win32Aux.h WndProc.h dumpBMP.h errors.h hugsQuit.h finalizers.h diatemp.h
+C_DIST_FILES=WndProc.c dumpBMP.c errors.c finalizers.c diatemp.c
+MK_DIST_FILES=Makefile mkGCDep .depend
+GC_DIST_FILES=$(wildcard *.gc)
+EXTRA_DIST_FILES=dist/README.ghc dist/README.hugs dist/ghc-win32.patch
+
+dist ::
+	mkdir $(SRC_DIST_DIR)
+	$(CP) $(GC_DIST_FILES) $(H_DIST_FILES) $(C_DIST_FILES) $(MK_DIST_FILES) $(SRC_DIST_DIR)
+	mkdir $(SRC_DIST_DIR)/dist
+	$(CP) $(EXTRA_DIST_FILES) $(SRC_DIST_DIR)/dist
+	$(ZIP) -r $(SRC_DIST_SNAP_NAME) $(SRC_DIST_DIR)
+#	$(RM) -rf $(SRC_DIST_DIR)
+
+publish ::
+	scp1 -v $(SRC_DIST_SNAP_NAME) sof@bathurst.dcs.gla.ac.uk:/local/ftp/pub/haskell/glasgow/green-card/
+
+#
+# Binary Hugs distributions
+#
+#
+# Binary ghc distributions
+#
+GhcVersion=$(shell $(GHC) --version 2>&1 | sed -e "s/.*version \([^,]*\).*/\1/g" )
+BIN_DIST_TOP_DIR=lib
+BIN_DIST_LIB_DIR=$(BIN_DIST_TOP_DIR)/i386-unknown-cygwin32/ghc-$(GhcVersion)
+
+BIN_DIST_HI_DIR=$(BIN_DIST_LIB_DIR)/imports/win32
+
+BIN_DIST_SNAP_NAME=win32-ghc-$(shell date +%d%m%y).zip
+
+# Ship these too to make it self-contained.
+BIN_DIST_ARCHIVE=libHSwin32$(_way).a
+BIN_DIST_HI_FILES=$(HI_FILES) $(GCLIBDIR)/StdDIS.$(way_)hi
+BIN_DIST_EXTRAS=dist/README.ghc dist/ghc-win32.patch
+
+ifneq "$(way)" ""
+binary-dist ::
+	mkdir -p $(BIN_DIST_HI_DIR)
+	$(CP) $(BIN_DIST_HI_FILES) $(BIN_DIST_HI_DIR)
+	$(CP) $(BIN_DIST_ARCHIVE)  $(BIN_DIST_LIB_DIR)
+endif
+
+#
+# Clean up
+#
+veryclean	:: clean
+		rm -f $(GEN_HS)
+clean		::
+		rm -f *.$(way_)o *.$(way_)hi libHSwin32$(_way).a $(GEN_CFILES) $(GEN_HFILES) $(GEN_HS)
+
+#
+# Way management - GHC specific magic.
+#
+ifeq "$(way)" ""
+__FILE_SUFFIXES := o hi
+
+WAY_TARGETS     = $(foreach way,$(WAYS),$(foreach suffix, $(__FILE_SUFFIXES), %.$(way)_$(suffix)))
+LIB_WAY_TARGETS = $(foreach way,$(filter-out n, $(WAYS)),libHSwin32_$(way).a)
+
+$(WAY_TARGETS) :
+	$(MAKE) way=$(basename $(subst _,.,$(subst .,,$(suffix $@)))) $@
+
+$(LIB_WAY_TARGETS) :
+	$(MAKE) $(MFLAGS) $@ way=$(subst .,,$(suffix $(subst _,.,$(basename $@))))
+
+endif
+
+ifeq "$(DLLized)" "YES"
+IMPLIBS=-luser32 -lgdi32 -ladvapi32
+
+HSwin32.dll : libHSwin32_dll.a
+	$(GHC) $(HC_OPTS) --mk-dll -o HSwin32.dll -optdll--export-all -optdll--output-def=HSwin32.def Win32Dialogue_stub.o Win32Window_stub.o libHSwin32_dll.a $(IMPLIBS)
+
+all :: HSwin32.dll
+
+ifneq "$(WAYS)" ""
+ifeq "$(way)" ""
+all clean install binary-dist ::
+	@case '${MFLAGS}' in *-[ik]*) x_on_err=0;; *-r*[ik]*) x_on_err=0;; *) x_on_err=1;; esac; \
+	for i in $(WAYS) ; do \
+	  $(MAKE) way=$$i $(MFLAGS) $@ ; \
+	  if [ $$? -eq 0 ] ; then true; else exit $$x_on_err; fi; \
+	done
+
+binary-dist ::
+	$(CP) $(BIN_DIST_EXTRAS) $(BIN_DIST_TOP_DIR)
+	$(ZIP) -r $(BIN_DIST_SNAP_NAME) $(BIN_DIST_TOP_DIR)
+
+endif
+endif
+endif
+
+# Hard-wired dependencies
+
+errors.o  : errors.c
+dumpBMP.o : dumpBMP.c
+WndProc.o : WndProc.c WndProc.h
+
+-include .depend
+-include .depend_hs

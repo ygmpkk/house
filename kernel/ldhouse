@@ -1,0 +1,28 @@
+
+# ldhouse - a linker script for House
+# Usage: to be invoked from ghc using "ghc -pgml ldhouse"
+
+TOP=${TOP-top}
+GHCTOP="${GHCTOP-$TOP/ghc-6.2}"
+SUPPORT="${SUPPORT-$TOP/support}"
+
+LDFLAGS1="-ufreeHaskellFunctionPtr -uErrorHdrHook -L$SUPPORT -L$GHCTOP/ghc/rts -L$GHCTOP/libraries/base -L$GHCTOP/libraries/base/cbits -static -x -estart -Ttext 0x100000"
+LDFLAGS2="-lHSrts -lHSbase -lHSbase_cbits -ltiny_gmp -ltiny_m -ltiny_c -ltiny_gcc"
+
+#C_OBJS="cbits/start.o cbits/c_start.o cbits/gprintf.o cbits/gfx.o cbits/modules.o cbits/userspace.o cbits/fault.o cbits/util.o cbits/io.o cbits/video.o"
+
+# Collect object files and the name of the executable from the arguments
+# supplied by GHC. Ignore other arguments. Reverse order of C object files.
+objs=""
+c_objs=""
+while [ $# != 0 ] ; do
+  case "$1" in
+    cbits/*.o) c_objs="$1 $c_objs" ;;
+    *.o) objs="$objs $1" ;;
+    -o) objs="$objs $1 $2"; shift;;
+  esac
+  shift
+done
+
+#echo "$c_objs $objs"
+ld -s $LDFLAGS1 $c_objs $objs $LDFLAGS2

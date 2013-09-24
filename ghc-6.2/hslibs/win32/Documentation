@@ -1,0 +1,37 @@
+The Haskell Win32 library is almost exactly the same as the C Win32
+library which is documented by Microsoft and in numerous books.
+
+The only changes were to change names and types to their nearest
+Haskell equivalents.  For example, the first letter of a function name
+must be lowercase so we change
+
+  CreateWindow
+
+to
+
+  createWindow
+
+The types are changed as follows:
+
+- Pointers which can be NULL, have a type of the form 'Maybe FooPtr'
+  instead of just 'FooPtr'
+
+- Function arguments which point to variables where results will be
+  stored (i.e., 'out' arguments) are turned into function results.
+  For example, we would translate:
+
+     void divMod(int x, int y, int* quotient, int* remainder)
+
+  to
+
+     divMod :: Int -> Int -> (Int,Int)
+
+
+The best approach is to lookup the type of a particular function using
+Hugs' or GHCi's :info command or, if that fails to help, look at the 
+GreenCard specification (the .gc files in the Win32 distribution or in 
+http://cvs.haskell.org/cgi-bin/cvsweb.cgi/fptools/hslibs/win32/).
+
+--
+Alastair Reid                 alastair@reid-consulting-uk.ltd.uk  
+Reid Consulting (UK) Limited  http://www.reid-consulting-uk.ltd.uk/alastair/

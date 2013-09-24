@@ -1,0 +1,9 @@
+#!/bin/sh
+HERE="$(dirname "$0")"
+if [ -L "$0" ] ; then
+  t="$(readlink "$0")"
+  HERE="$HERE/$(dirname "$t")"
+fi
+echo >&2 "HERE=$HERE 0=$0"
+TOP="$HERE/../../.."
+exec "$HERE/ghc-6.2" "-B$TOP" "$@"

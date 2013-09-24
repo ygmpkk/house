@@ -1,0 +1,94 @@
+# This Makefile.common is used only in an nhc98 build of the libraries.
+# It is included from each package's individual Makefile.nhc98.
+# We assume the following definitions have already been made in
+# the importing Makefile.
+#
+# THISPKG = e.g. mypkg
+# SEARCH  = e.g. -P../IO -P../PreludeIO -package base
+# SRCS    = all .hs .gc and .c files
+#
+# EXTRA_H_FLAGS = e.g. -prelude
+# EXTRA_C_FLAGS = e.g. -I../Binary
+include ../Makefile.inc
+
+DIRS     = $(shell ${LOCAL}pkgdirlist ${THISPKG})
+
+OBJDIR   = ${BUILDDIR}/${OBJ}/libraries/${THISPKG}
+OBJDIRS  = $(patsubst %, ${OBJDIR}/%, ${DIRS})
+FINALLIB = ${DST}/libHS${THISPKG}.a
+INCDIRS  = ${INCDIR}/${THISPKG} $(patsubst %, ${INCDIR}/${THISPKG}/%, ${DIRS})
+.SUFFIXES: .hi .hs .o .gc .c .hc .p.o .p.c .z.o .z.c
+
+
+OBJS_HS  = $(patsubst %.hs, ${OBJDIR}/%.$O, $(filter %.hs,${SRCS}))
+OBJS_GC  = $(patsubst %.gc, ${OBJDIR}/%.$O, $(filter %.gc,${SRCS}))
+OBJS_C   = $(patsubst %.c,  ${OBJDIR}/%.$O, $(filter %.c, ${SRCS}))
+OBJS = ${OBJS_HS} ${OBJS_GC} ${OBJS_C}
+
+CFILES_HS  = $(patsubst %.hs, %.$C, $(filter %.hs, ${SRCS}))
+CFILES_GC  = $(patsubst %.gc, %.$C, $(filter %.gc, ${SRCS}))
+CFILES_XS  = $(patsubst %.gc, %_.$C, $(filter %.gc, ${SRCS})) \
+             $(patsubst %.gc, %_.hs, $(filter %.gc, ${SRCS}))
+CFILES_GEN = ${CFILES_HS} ${CFILES_GC} ${CFILE_MAIN}
+
+
+
+all: ${OBJDIR} ${OBJDIRS} ${INCDIRS} ${OBJS} extra ${FINALLIB}
+extra:
+cfiles: extracfiles ${CFILES_GEN}
+extracfiles:
+fromC: ${OBJDIR} ${OBJS_C} ${OBJDIRS}
+	$(HC) -c -d $(OBJDIR) $(EXTRA_C_FLAGS) *.$C
+	for dir in ${DIRS}; \
+	  do $(HC) -c -d $(OBJDIR) $(EXTRA_C_FLAGS) $$dir/*.$C; \
+	  done
+	echo $(OBJS) | xargs ar cr ${FINALLIB}
+objdir: ${OBJDIR} ${OBJDIRS} ${INCDIR}/${THISPKG}
+${OBJDIR} ${OBJDIRS} ${INCDIRS}:
+	mkdir -p $@
+${FINALLIB}: ${OBJS}
+	echo $(OBJS) | xargs ar cr $@
+cleanhi:
+	-rm -f $(patsubst %, %/*.hi, ${DIRS})
+cleanC: cleanExtraC
+	-rm -f ${CFILES_GEN} ${CFILES_XS}
+clean:	cleanhi cleanC
+	-rm -f $(patsubst %, ${OBJDIR}/%/*.$O, ${DIRS})
+	-rm -f $(patsubst %.gc, %_.hs, $(filter %.gc, $(SRCS)))
+	-rm -f $(patsubst %.gc, %_.$C,  $(filter %.gc, $(SRCS)))
+cleanExtraC:
+
+# general build rules for making objects from Haskell files
+${OBJS_HS}: ${OBJDIR}/%.$O : %.hs
+	$(HC) -c -cpp -I$(INCDIR)/$(THISPKG) $(SEARCH) $(EXTRA_H_FLAGS) -o $@ $<
+	mv $(patsubst %.hs, %.hi, $<) \
+		$(patsubst %.hs, ${INCDIR}/${THISPKG}/%.hi, $<)
+${OBJS_GC}: ${OBJDIR}/%.$O : %.gc
+	${HC} -c -I$(INCDIR)/$(THISPKG) ${SEARCH} $(EXTRA_H_FLAGS) -o $@ $<
+	mv $(patsubst %.gc, %.hi, $<) \
+		$(patsubst %.gc, ${INCDIR}/${THISPKG}/%.hi, $<)
+
+# general build rule for making objects from C files
+${OBJS_C}: ${OBJDIR}/%.$O : %.c
+	$(CC) -c -I$(INCDIR) $(ENDIAN) $(EXTRA_C_FLAGS) -o $@ $<
+
+# general build rules for making C files from Haskell files
+${CFILES_HS}: %.$C : %.hs
+	$(HC) -C -cpp -I$(INCDIR)/$(THISPKG) $(SEARCH) $(EXTRA_H_FLAGS) $<
+	rm $(patsubst %.hs, %.hi, $<)
+${CFILES_GC}: %.$C : %.gc
+	$(HC) -C -I$(INCDIR)/$(THISPKG) $(SEARCH) $(EXTRA_H_FLAGS) $<
+
+# hack to get round mutual recursion between libraries
+HIFILES = $(patsubst %.hs,../${THISLIB}/%.${HISUFFIX},$(filter %.hs, ${SRCS}))
+${HIFILES}: ../${THISLIB}/%.${HISUFFIX} : %.hs
+	$(HC) -c $(PART_FLAGS) -o /dev/null $<
+
+# The importing Makefile should now define individual dependencies
+#    e.g.
+# ${OBJDIR}/Function.$O: Function.hs ${OBJDIR}/Other.$O
+#
+# and C-files dependencies likewise
+#    e.g.
+# AlignBin.c:    BinHandle.c
+

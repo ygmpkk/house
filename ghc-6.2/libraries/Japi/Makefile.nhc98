@@ -1,0 +1,23 @@
+THISPKG	= Japi
+SEARCH	= -I$(TOPDIR)/targets/$(MACHINE) -package Japi
+
+DIRS	= $(shell ${LOCAL}pkgdirlist ${THISPKG})
+
+SRCS	= \
+	Graphics/UI/Japi/Types.hs Graphics/UI/Japi/Constants.hs \
+	Graphics/UI/Japi/Binding.hs
+
+EXTRA_H_FLAGS = -package base
+
+# Here are the main rules.
+include ../Makefile.common
+
+# some extra rules
+
+# Here are the dependencies.
+$(OBJDIR)/Graphics/UI/Japi/Constants.$O: $(OBJDIR)/Graphics/UI/Japi/Types.$O
+$(OBJDIR)/Graphics/UI/Japi/Binding.$O: $(OBJDIR)/Graphics/UI/Japi/Types.$O $(OBJDIR)/Graphics/UI/Japi/Constants.$O
+
+# C-files dependencies.
+Graphics/UI/Japi/Constants.$C: Graphics/UI/Japi/Types.$C
+Graphics/UI/Japi/Binding.$C: $(OBJDIR)/Graphics/UI/Japi/Types.$C Graphics/UI/Japi/Constants.$C

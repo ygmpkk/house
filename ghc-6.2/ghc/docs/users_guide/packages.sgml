@@ -1,0 +1,682 @@
+  <sect1 id="packages">
+    <title>Packages</title>
+    <indexterm><primary>packages</primary></indexterm>
+
+    <para>Packages are collections of libraries, conveniently grouped
+    together as a single entity.  The package system is flexible: a
+    package may consist of Haskell code, foreign language code (eg. C
+    libraries), or a mixture of the two.  A package is a good way to
+    group together related Haskell modules, and is essential if you
+    intend to make the modules into a Windows DLL (see below).</para>
+
+    <para>Because packages can contain both Haskell and C libraries, they
+    are also a good way to provide convenient access to a Haskell
+    layer over a C library.</para>
+
+    <para>GHC comes with several packages (see the accompanying
+    library documentation), and packages can be added to or removed
+    from an existing GHC installation, using the supplied
+    <literal>ghc-pkg</literal><indexterm><primary><literal>ghc-pkg</literal></primary>
+    </indexterm> tool, described in <xref
+    linkend="package-management">.</para>
+
+    <sect2 id="using-packages">
+      <title>Using a package</title>
+      <indexterm><primary>packages</primary>
+	<secondary>using</secondary></indexterm>
+      
+      <para>Some packages are automatically available: you don't need
+      to specify any extra flags to use them (except in certain
+      circumstances; see below).  All the packages which contain
+      hierarchical libraries fall into this category.</para>
+
+      <para>Some other packages are <emphasis>not</emphasis>
+      automatically available: those are normally the packages
+      containing old non-hierarchical libraries.  To gain access to a
+      non-auto package, use the <option>-package</option> command-line
+      flag:</para>
+
+      <variablelist>
+	<varlistentry>
+	  <term><option>-package <replaceable>lib</replaceable></option></term>
+	  <indexterm><primary>-package <replaceable>lib</replaceable> option</primary></indexterm>
+	  <listitem>
+	    <para>This option brings into scope all the modules from
+	    package <literal><replaceable>lib</replaceable></literal> (they still have to
+	    be imported in your Haskell source, however).  It also
+	    causes the relevant libraries to be linked when linking is
+	    being done.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+
+      <para>There's one case where you need to use the
+      <option>-package</option> option even for auto packages: when
+      linking a program in batch mode<footnote><para>This is because
+      GHC can't figure out from the object files which packages are
+      required; in <option>&ndash;&ndash;make</option> mode and in
+      GHCi the compiler has more information available to figure out
+      the package dependencies.  We might try to lift this restriction
+      in the future.</para></footnote>.  For example, to link a
+      program consisting of objects <filename>Foo.o</filename> and
+      <filename>Main.o</filename>, where we made use of the
+      <literal>network</literal> package:</para>
+
+<screen>$ ghc -o myprog Foo.o Main.o -package network</screen>
+
+      <para>Some packages depend on other packages, for example the
+      <literal>text</literal> package makes use of some of the modules
+      in the <literal>lang</literal> package.  The package system
+      takes care of all these dependencies, so that when you say
+      <literal>-package text</literal> on the command line, you
+      automatically get <literal>-package lang</literal> too.</para>
+    </sect2>
+
+    <sect2 id="using-local-packages">
+      <title>Maintaining a local set of packages</title>
+      
+      <para>When GHC starts up, it automatically reads the default set
+      of packages from a configuration file, normally named
+      <filename>package.conf</filename> in your GHC installation
+      directory.</para>
+
+      <para>You can load in additional package configuration files
+      using the <option>-package-conf</option> option:</para>
+
+      <variablelist>
+	<varlistentry>
+	  <term><option>-package-conf <replaceable>file</replaceable></option></term>
+	  <indexterm><primary><option>-package-conf <replaceable>file</replaceable></option></primary>
+	  </indexterm>
+	  <listitem>
+	    <para>Read in the package configuration file
+	    <replaceable>file</replaceable> in addition to the system
+	    default file.  This allows the user to have a local set of
+	    packages in addition to the system-wide ones.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+
+      <para>To create your own package configuration file, just create
+      a new file and put the string
+      <quote><literal>[]</literal></quote> in it.  Packages can be
+      added to the new configuration file using the
+      <literal>ghc-pkg</literal> tool, described in <xref
+      linkend="package-management">.</para>
+    </sect2>
+
+    <sect2 id="building-packages">
+      <title>Building a package from Haskell source</title>
+      <indexterm><primary>packages</primary>
+	<secondary>building</secondary></indexterm>
+
+      <para>It takes some special considerations to build a new
+      package:</para>
+
+      <itemizedlist>
+	<listitem>
+	  <para>A package may contain several Haskell modules. A
+          package may span many directories, or many packages may
+          exist in a single directory. Packages may not be mutually
+          recursive.</para>
+	</listitem>
+
+	<listitem>
+	  <para>A package has a name
+  	  (e.g. <filename>base</filename>)</para>
+	</listitem>
+
+	<listitem>
+	  <para>The Haskell code in a package may be built into one or
+	  more archive libraries
+	  (e.g. <filename>libHSfoo.a</filename>), or a single DLL on
+	  Windows (e.g. <filename>HSfoo.dll</filename>).  The
+	  restriction to a single DLL on Windows is because the
+	  package system is used to tell the compiler when it should
+	  make an inter-DLL call rather than an intra-DLL call
+	  (inter-DLL calls require an extra
+	  indirection). <emphasis>Building packages as DLLs doesn't
+	  work at the moment; see <XRef LinkEnd="win32-dlls-create">
+	  for the gory details.</emphasis>
+	  </para>
+
+	  <para>Building a static library is done by using the
+	  <literal>ar</literal> tool, like so:</para>
+
+<screen>ar cqs libHSfoo.a A.o B.o C.o ...</screen>
+
+	  <para>where <filename>A.o</filename>,
+	  <filename>B.o</filename> and so on are the compiled Haskell
+	  modules, and <filename>libHSfoo.a</filename> is the library
+	  you wish to create.  The syntax may differ slightly on your
+	  system, so check the documentation if you run into
+	  difficulties.</para>
+
+	  <para>Versions of the Haskell libraries for use with GHCi
+	  may also be included: GHCi cannot load <literal>.a</literal>
+	  files directly, instead it will look for an object file
+	  called <filename>HSfoo.o</filename> and load that.  On some
+	  systems, the <literal>ghc-pkg</literal> tool can
+	  automatically build the GHCi version of each library, see
+	  <xref linkend="package-management">.  To build these
+	  libraries by hand from the <literal>.a</literal> archive, it
+	  is possible to use GNU <command>ld</command> as
+	  follows:</para>
+
+<screen>ld -r &ndash;&ndash;whole-archive -o HSfoo.o libHSfoo.a</screen>
+	</listitem>
+
+	<listitem>
+	  <para>GHC does not maintain detailed cross-package
+          dependency information.  It does remember which modules in
+          other packages the current module depends on, but not which
+          things within those imported things.</para>
+	</listitem>
+      </itemizedlist>
+
+      <para>To compile a module which is to be part of a new package,
+      use the <literal>-package-name</literal> option:</para>
+
+      <variablelist>
+	<varlistentry>
+	  <term><option>-package-name <replaceable>foo</replaceable></option></term>
+	  <indexterm><primary><literal>-package-name</literal></primary>
+	    <secondary>option</secondary></indexterm>
+	  <listitem>
+	    <para>This option is added to the command line when
+	    compiling a module that is destined to be part of package
+	    <literal>foo</literal>.  If this flag is omitted then the
+	    default package <literal>Main</literal> is assumed.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+
+      <para>Failure to use the <literal>-package-name</literal> option
+      when compiling a package will result in disaster on Windows, but
+      is relatively harmless on Unix at the moment (it will just cause
+      a few extra dependencies in some interface files).  However,
+      bear in mind that we might add support for Unix shared libraries
+      at some point in the future.</para>
+
+      <para>It is worth noting that on Windows, when each package
+      is built as a DLL, since a reference to a DLL costs an extra
+      indirection, intra-package references are cheaper than
+      inter-package references. Of course, this applies to the
+      <filename>Main</filename> package as well.</para>
+    </sect2>
+
+    <sect2 id="package-management">
+      <title>Package management</title>
+      <indexterm><primary>packages</primary>
+	<secondary>management</secondary></indexterm>
+      
+      <para>The <literal>ghc-pkg</literal> tool allows packages to be
+      added or removed from a package configuration file.  By default,
+      the system-wide configuration file is used, but alternatively
+      packages can be added, updated or removed from a user-specified
+      configuration file using the <option>&ndash;&ndash;config-file</option>
+      option.  An empty package configuration file consists of the
+      string <quote><literal>[]</literal></quote>.</para>
+
+      <para>The <literal>ghc-pkg</literal> program accepts the
+      following options:</para>
+
+      <variablelist>
+	<varlistentry>
+	  <term><option>&ndash;&ndash;add-package</option></term>
+	  <term><option>-a</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;add-package</option></primary></indexterm>
+	  <listitem>
+	    <para>Reads package specification from the input (see below),
+	    and adds it to the database of installed packages.  The
+	    package specification must be a package that isn't already
+	    installed.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;input-file=<replaceable>file</replaceable></option></term>
+	  <term><option>-i <replaceable>file</replaceable></option></term>
+	  <indexterm><primary><option>&ndash;&ndash;input-file</option></primary></indexterm>
+	  <listitem>
+	    <para>Read new package specifications from file
+	    <replaceable>file</replaceable>. If a value of
+	    <filename>"-"</filename> is given, standard input is used.
+	    If no <option>-i</option> is present on the command-line,
+	    an input file of <filename>"-"</filename> is assumed.
+	    </para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;auto-ghci-libs</option></term>
+	  <term><option>-g</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;auto-ghci-libs</option></primary>
+	      </indexterm>
+	  <listitem>
+	    <para>Automatically generate the GHCi
+	    <filename>.o</filename> version of each
+	    <filename>.a</filename> Haskell library, using GNU ld (if
+	    that is available).  Without this option,
+	    <literal>ghc-pkg</literal> will warn if GHCi versions of
+	    any Haskell libraries in the package don't exist.</para>
+	    
+	    <para>GHCi <literal>.o</literal> libraries don't
+	    necessarily have to live in the same directory as the
+	    corresponding <literal>.a</literal> library.  However,
+	    this option will cause the GHCi library to be created in
+	    the same directory as the <literal>.a</literal>
+	    library.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;config-file <replaceable>file</replaceable></option></term>
+	  <term><option>-f <replaceable>file</replaceable></option></term>
+	  <indexterm><primary><option>&ndash;&ndash;config-file</option></primary>
+	      </indexterm>
+	  <listitem>
+	    <para>Use <replaceable>file</replaceable> as an additional
+	    package configuration file. This is used to modify
+	    configuration files for use with GHC's
+	    <option>-package-conf</option> option.</para>
+
+	    <para>There may be any number of configuration files named
+            on the command line; files mentioned later on the
+            command-line override those mentioned earlier.  The
+            <emphasis>last</emphasis> configuration file mentioned on
+            the command-line is the only one that is actually modified
+            by <literal>ghc-pkg</literal>.</para>
+
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;list-packages</option></term>
+	  <term><option>-l</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;list-packages</option></primary></indexterm>
+	  <listitem>
+	    <para>This option displays the list of currently installed
+	    packages, including those in extra configuration files
+	    specified with the <option>&ndash;&ndash;config-file</option>
+	    option.</para>
+
+<screen>
+  $ ghc-pkg &ndash;&ndash;list-packages
+  /usr/local/lib/ghc-5.05/package.conf:
+    hdirect, readline, lang, concurrent, posix, util, data, text, net,
+    hssource, rts, haskell98, network, haskell-src, unix, base
+</screen>
+
+	    <para>Note that your GHC installation might have a
+            slightly different set of packages installed.</para>
+
+	    <para>The <literal>rts</literal> package is always
+            present, and represents the runtime system library.  The
+            <literal>base</literal> package contains the Haskell
+            prelude and basic hierarchical libraries, and the
+            <literal>haskell98</literal> package contains the Haskell
+            98 standard libraries.  The rest of the packages are
+            optional libraries.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;list-local-packages</option></term>
+	  <term><option>-L</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;list-local-packages</option></primary></indexterm>
+	  <listitem>
+	    <para>Displays the list of packages installed in the
+	    topmost configuration file only: that will be the
+	    configuration file specified using <option>-f</option> on
+	    the command line, or the system configuration file
+	    otherwise.</para>
+	    
+	    <para>This option may be more convenient than
+	    <option>-l</option> when the output needs to be parsed by
+	    a script.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><option>&ndash;&ndash;remove-package <replaceable>foo</replaceable></option></term>
+	  <term><option>-r <replaceable>foo</replaceable></option></term>
+	  <indexterm><primary><option>&ndash;&ndash;delete-package</option></primary>
+	      </indexterm>
+	  <listitem>
+	    <para>Removes the specified package from the installed
+	    configuration.</para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><option>&ndash;&ndash;update-package</option></term>
+	  <term><option>-u</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;update-package</option></primary></indexterm>
+	  <listitem>
+	    <para>Reads package specification from the input, and
+	    adds it to the database of installed packages. If a package
+	    with the same name is already installed, its configuration
+	    data is replaced with the new information. If the package
+	    doesn't already exist, it's added.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><option>&ndash;&ndash;force</option></term>
+	  <indexterm><primary><option>&ndash;&ndash;force</option></primary></indexterm>
+	  <listitem>
+	    <para>Causes <literal>ghc-pkg</literal> to ignore missing
+	    directories and libraries when adding a package, and just
+	    go ahead and add it anyway.  This might be useful if your
+	    package installation system needs to add the package to
+	    GHC before building and installing the files.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+
+      <para>When modifying the configuration file
+      <replaceable>file</replaceable>, a copy of the original file is
+      saved in <replaceable>file</replaceable><literal>.old</literal>,
+      so in an emergency you can always restore the old settings by
+      copying the old file back again.</para>
+
+      <para>A package specification looks like this:</para>
+
+<screen>
+  Package {
+     name            = "mypkg",
+     auto            = True,
+     import_dirs     = ["${installdir}/imports/mypkg"],
+     source_dirs     = [],
+     library_dirs    = ["${installdir}"],
+     hs_libraries    = ["HSmypkg" ],
+     extra_libraries = ["HSmypkg_cbits"],
+     include_dirs    = [],
+     c_includes      = ["HsMyPkg.h"],
+     package_deps    = ["text", "data"],
+     extra_ghc_opts  = [],
+     extra_cc_opts   = [],
+     extra_ld_opts   = ["-lmy_clib"]
+  }
+</screen>
+
+      <para>Components of a package specification may be specified in
+      any order, and are:</para>
+
+      <variablelist>
+	<varlistentry>
+	  <term><literal>name</literal></term>
+	  <indexterm><primary><literal>name</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+            <para>The package's name, for use with
+            the <literal>-package</literal> flag and as listed in the
+            <literal>&ndash;&ndash;list-packages</literal> list. 
+            </para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>auto</literal></term>
+	  <indexterm><primary><literal>auto</literal></primary>
+	    <secondary>package specification</secondary>
+	  </indexterm>
+	  <listitem>
+	    <para>Set to <literal>True</literal> if the package should
+	    be automatically available (see <xref
+	    linkend="using-packages">).  This is normally set to
+	    <literal>True</literal> for packages which contain
+	    hierarchical libraries, because in that case there is no
+	    danger of polluting the module namespace.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>import_dirs</literal></term>
+	  <indexterm><primary><literal>import_dirs</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of directories containing interface files
+	    (<literal>.hi</literal> files) for this package.</para>
+
+	    <para>If the package contains profiling libraries, then
+	    the interface files for those library modules should have
+	    the suffix <literal>.p_hi</literal>.  So the package can
+	    contain both normal and profiling versions of the same
+	    library without conflict (see also
+	    <literal>library_dirs</literal> below).</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>source_dirs</literal></term>
+	  <indexterm><primary><literal>source_dirs</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of directories containing Haskell source
+	    files for this package.  This field isn't used by GHC, but
+	    could potentially be used by an all-interpreted system
+	    like Hugs.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>library_dirs</literal></term>
+	  <indexterm><primary><literal>library_dirs</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of directories containing libraries for this
+	    package.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>hs_libraries</literal></term>
+	  <indexterm><primary><literal>hs_libraries</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of libraries containing Haskell code for this
+	    package, with the <literal>.a</literal> or
+	    <literal>.dll</literal> suffix omitted.  When packages are
+	    built as libraries, the
+	    <literal>lib</literal> prefix is also omitted.</para>
+
+	    <para>For use with GHCi, each library should have an
+	    object file too.  The name of the object file does
+	    <emphasis>not</emphasis> have a <literal>lib</literal>
+	    prefix, and has the normal object suffix for your
+	    platform.</para>
+
+	    <para>For example, if we specify a Haskell library as
+	    <filename>HSfoo</filename> in the package spec, then the
+	    various flavours of library that GHC actually uses will be
+	    called:</para>
+	    <variablelist>
+	      <varlistentry>
+		<term><filename>libHSfoo.a</filename></term>
+		<listitem>
+		  <para>The name of the library on Unix and Windows
+		  (mingw) systems.  Note that we don't support
+		  building dynamic libraries of Haskell code on Unix
+		  systems.</para>
+		</listitem>
+	      </varlistentry>
+	      <varlistentry>
+		<term><filename>HSfoo.dll</filename></term>
+		<listitem>
+		  <para>The name of the dynamic library on Windows
+		  systems (optional).</para>
+		</listitem>
+	      </varlistentry>
+	      <varlistentry>
+		<term><filename>HSfoo.o</filename></term>
+		<term><filename>HSfoo.obj</filename></term>
+		<listitem>
+		  <para>The object version of the library used by
+		  GHCi.</para>
+		</listitem>
+	      </varlistentry>
+	    </variablelist>
+
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>extra_libraries</literal></term>
+	  <indexterm><primary><literal>extra_libraries</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of extra libraries for this package.  The
+	    difference between <literal>hs_libraries</literal> and
+	    <literal>extra_libraries</literal> is that
+	    <literal>hs_libraries</literal> normally have several
+	    versions, to support profiling, parallel and other build
+	    options.  The various versions are given different
+	    suffixes to distinguish them, for example the profiling
+	    version of the standard prelude library is named
+	    <filename>libHSstd_p.a</filename>, with the
+	    <literal>_p</literal> indicating that this is a profiling
+	    version.  The suffix is added automatically by GHC for
+	    <literal>hs_libraries</literal> only, no suffix is added
+	    for libraries in
+	    <literal>extra_libraries</literal>.</para>
+
+	    <para>The libraries listed in
+	    <literal>extra_libraries</literal> may be any libraries
+	    supported by your system's linker, including dynamic
+	    libraries (<literal>.so</literal> on Unix,
+	    <literal>.DLL</literal> on Windows).</para>
+
+	    <para>Also, <literal>extra_libraries</literal> are placed
+	    on the linker command line after the
+	    <literal>hs_libraries</literal> for the same package.  If
+	    your package has dependencies in the other direction (i.e.
+	    <literal>extra_libraries</literal> depends on
+	    <literal>hs_libraries</literal>), and the libraries are
+	    static, you might need to make two separate
+	    packages.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>include_dirs</literal></term>
+	  <indexterm><primary><literal>include_dirs</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of directories containing C includes for this
+	    package (maybe the empty list).</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>c_includes</literal></term>
+	  <indexterm><primary><literal>c_includes</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of files to include for via-C compilations
+	    using this package.  Typically this include file will
+	    contain function prototypes for any C functions used in
+	    the package, in case they end up being called as a result
+	    of Haskell functions from the package being
+	    inlined.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>package_deps</literal></term>
+	  <indexterm><primary><literal>package_deps</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>A list of packages which this package depends
+	    on.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>extra_ghc_opts</literal></term>
+	  <indexterm><primary><literal>extra_ghc_opts</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>Extra arguments to be added to the GHC command line
+	    when this package is being used.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>extra_cc_opts</literal></term>
+	  <indexterm><primary><literal>extra_cc_opts</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>Extra arguments to be added to the gcc command line
+	    when this package is being used (only for via-C
+	    compilations).</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>extra_ld_opts</literal></term>
+	  <indexterm><primary><literal>extra_ld_opts</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>Extra arguments to be added to the
+	    <command>gcc</command> command line (for linking) when
+	    this package is being used.</para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><literal>framework_dirs</literal></term>
+	  <indexterm><primary><literal>framework_dirs</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>On Darwin/MacOS X, a list of directories containing frameworks for this
+	    package. This corresponds to the <option>-framework-path</option> option.
+	    It is ignored on all other platforms.</para>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><literal>extra_frameworks</literal></term>
+	  <indexterm><primary><literal>extra_frameworks</literal></primary>
+	    <secondary>package specification</secondary></indexterm>
+	  <listitem>
+	    <para>On Darwin/MacOS X, a list of frameworks to link to. This corresponds to the
+	    <option>-framework</option> option. Take a look at Apple's developer documentation
+	    to find out what frameworks actually are. This entry is ignored on all other platforms.</para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+      
+      <para>
+      The <literal>ghc-pkg</literal> tool performs expansion of
+      environment variables occurring in input package specifications.
+      So, if the <literal>mypkg</literal> was added to the package
+      database as follows:
+      </para>
+<screen>
+  $ installdir=/usr/local/lib ghc-pkg -a < mypkg.pkg
+</screen>
+      
+      <para>
+      The occurrence of <literal>${installdir}</literal> is replaced
+      with <literal>/usr/local/lib</literal> in the package data that
+      is added for <literal>mypkg</literal>.
+      </para>
+      
+      <para>
+      This feature enables the distribution of package specification
+      files that can be easily configured when installing.
+      </para>
+
+      <para>For examples of more package specifications, take a look
+      at the <literal>package.conf</literal> in your GHC
+      installation.</para>
+    </sect2>
+  </sect1>
+
+<!-- Emacs stuff:
+     ;;; Local Variables: ***
+     ;;; mode: sgml ***
+     ;;; sgml-parent-document: ("using.sgml" "book" "chapter") ***
+     ;;; End: ***
+ -->

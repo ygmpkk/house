@@ -1,0 +1,190 @@
+--
+-- StdDIS for Hugs
+--
+-- (c) Thomas Nordin and Alastair Reid, 1997
+--
+
+module StdDIS
+        ( StablePtr
+        , ForeignObj
+        , module Int
+        , module Word
+        , module Addr
+        , module IOExts
+        , MbString
+        , marshall_bool_,      unmarshall_bool_
+        , marshall_string_,    unmarshall_string_
+        , marshall_stringLen_, unmarshall_stringLen_
+        , makeStablePtr, deRefStablePtr, freeStablePtr
+        , malloc, free
+        , makeForeignObj
+	, makeForeignObjPrim
+
+{- BEGIN_GHC_ONLY
+	, funPtrToAddr
+	, addrToFunPtr
+	, FunPtr
+	, ptrToAddr
+	, addrToPtr
+	, Ptr
+   END_GHC_ONLY -}
+        ) where
+
+
+import Int
+import Word
+import Addr 
+import IOExts
+import Monad( zipWithM_ )
+import Foreign ( StablePtr, newStablePtr,
+                 deRefStablePtr, 
+                 freeStablePtr
+               )
+{- BEGIN_GHC_ONLY
+import Foreign(
+	Ptr,
+	FunPtr,
+	castFunPtrToPtr,
+	castPtrToFunPtr
+ 	)
+import Addr(
+	addrToPtr,
+	ptrToAddr
+	)
+   END_GHC_ONLY -}
+import ForeignObj ( ForeignObj, newForeignObj, makeForeignObj )
+
+makeStablePtr = newStablePtr
+
+%dis char x             = %%Char   ({char}         x)
+%dis int x              = %%Int    ({int}          x)
+%dis float x            = %%Float  ({float}        x)
+%dis double x           = %%Double ({double}       x)
+%dis addr x             = %%Addr   ({void *}       x)
+%dis word32 x           = %%Word   ({unsigned int} x)
+
+%dis int8 x             = < int8ToInt  / intToInt8  > (int x)
+%dis int16 x            = < int16ToInt / intToInt16 > (int x)
+%dis int32 x            = < int32ToInt / intToInt32 > (int x)
+
+%dis word8 x            = < word8ToWord32  / word32ToWord8  > (word32 x)
+%dis word16 x           = < word16ToWord32 / word32ToWord16 > (word32 x)
+
+%dis maybeT z x         = %Maybe z x
+%dis maybe x            = maybeT {0} x
+
+%dis bool x             = bool_ (int x)
+
+marshall_bool_ :: Bool -> IO Int
+marshall_bool_ True  = return 1
+marshall_bool_ False = return 0
+
+unmarshall_bool_ :: Int -> IO Bool
+unmarshall_bool_ 0 = return False
+unmarshall_bool_ _ = return True
+
+-- Ignore "IO" part of result type
+%dis iO x = x
+
+----------------------------------------------------------------
+-- Strings
+----------------------------------------------------------------
+
+%dis string x      = string_    (addr ({char *} x))
+%dis stringLen x l = stringLen_ (addr ({char *} x)) (int l)
+
+type MbString      = Maybe String
+%dis mbString x    = maybeT {nullAddr} (string x)
+
+marshall_string_ :: [Char] -> IO Addr
+marshall_string_ cs =
+ do arr <- allocCharStar (1 + length cs)
+    zipWithM_ (writeCharAddr arr) [0..] (cs ++ "\0")
+    return arr
+
+marshall_stringLen_ :: [Char] -> IO (Addr, Int)
+marshall_stringLen_ cs =
+ do let l = length cs
+    arr <- allocCharStar (l+1)
+    zipWithM_ (writeCharAddr arr) [0..] (cs ++ "\0")
+    return (arr,l)
+
+unmarshall_string_ :: Addr -> IO String
+unmarshall_string_ ptr = reads "" 0
+  where
+    reads str i =
+      readCharAddr ptr i >>= \c ->
+      if c == '\0' then
+        return (reverse str)
+      else
+        reads (c:str) (i+1)
+
+unmarshall_stringLen_ :: Addr -> Int -> IO String
+unmarshall_stringLen_ ptr l = mapM (readCharAddr ptr) [0..l-1]
+
+%fun writeCharAddr :: Addr -> Int -> Char -> IO ()
+%call (addr ({char*} s)) (int i) (char v)
+%{ s[i] = v; %}
+ 
+%fun readCharAddr :: Addr -> Int -> IO Char
+%call (addr ({char*} s)) (int i)
+%{ res1 = s[i]; %}
+
+%fun allocCharStar :: Int -> IO Addr
+%{ res1 = (char *)malloc(sizeof(char) * arg1); %}
+%result (addr ({char*} res1))
+ 
+----------------------------------------------------------------
+-- malloc/free
+----------------------------------------------------------------
+
+%#include <stdlib.h>
+
+%fun malloc :: Word32 -> IO Addr
+%fail {res1==0} { "malloc failed" }
+ 
+%dis free x             = freeAux x
+%fun free :: Addr -> IO ()
+
+----------------------------------------------------------------
+-- Stable pointers
+----------------------------------------------------------------
+
+--
+-- Use "stable" to create a stable pointer
+-- 
+-- Use "stablePtr" to manipulate (previously constructed) stable pointers 
+-- in Haskell.
+--
+%dis stable    x = <<makeStablePtr/deRefStablePtr>> (stablePtr x)
+%dis stablePtr x = (%%StablePtr ({unsigned long} x))
+
+----------------------------------------------------------------
+-- Foreign Objects
+----------------------------------------------------------------
+
+-- Use foreign when you want to control what free routine
+-- to use.
+--
+%dis foreign x free     = %Foreign {void*} x free
+%dis foreignPtr x       = foreign x {free}
+%dis foreignObj x       = foreign x {free}
+
+makeForeignObjPrim = makeForeignObj
+
+----------------------------------------------------------------
+-- GHC portability hack
+----------------------------------------------------------------
+
+{- BEGIN_GHC_ONLY
+funPtrToAddr :: FunPtr a -> Addr
+funPtrToAddr x = ptrToAddr (castFunPtrToPtr x)
+
+addrToFunPtr :: Addr -> FunPtr a
+addrToFunPtr x = castPtrToFunPtr (addrToPtr x)
+   END_GHC_ONLY -}
+
+----------------------------------------------------------------
+-- End of StdDIS
+----------------------------------------------------------------
+

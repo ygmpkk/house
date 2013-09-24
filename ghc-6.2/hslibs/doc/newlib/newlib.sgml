@@ -1,0 +1,165 @@
+<!DOCTYPE Article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+
+<Article>
+
+<ArtHeader>
+
+<Title>Adding libraries to hslibs</Title>
+<Author><OtherName>The GHC Team</OtherName></Author>
+<Address><Email>glasgow-haskell-&lcub;users,bugs&rcub;@dcs.gla.ac.uk</Email></Address>
+<PubDate>January 2000</PubDate>
+
+</ArtHeader>
+
+<Sect1><Title>How to add a library</Title>
+
+<Para>The main <Filename>hslibs</Filename> directory contains a subdirectory
+for each set of libraries. Each library directory should contain:
+
+<VariableList>
+
+<VarListEntry>
+<Term>The source code</Term>
+<ListItem>
+<Para>
+Haskell files in the main directory, and C files in a
+<Filename>cbits</Filename> subdirectory (this should exist whether or not
+you actually have any C source). In a large library, the Haskell code
+may also be placed in subdirectories.
+</Para>
+</ListItem>
+</VarListEntry>
+
+<VarListEntry>
+<Term>Documentation</Term>
+<ListItem>
+<Para>
+In the <Filename>doc</Filename> directory, preferably in DocBook format. See
+<Xref LinkEnd="sec-adddoc"> for more details.
+</Para>
+</ListItem>
+</VarListEntry>
+
+<VarListEntry>
+<Term>A <Filename>Makefile</Filename></Term>
+<ListItem>
+<Para>
+This should have the following format:
+</Para>
+<ProgramListing>
+# -----------------------------------------------------------------------------=
+# $Id: newlib.sgml,v 1.3 2001/07/05 13:01:15 rrt Exp $
+#
+# (c) The Furballs 2005
+#
+
+TOP = ..
+include $(TOP)/mk/boilerplate.mk
+
+PACKAGE = foo
+PACKAGE_DEPS = bar baz
+HAS_CBITS = YES
+SRCS_FROM_SUBDIRS = wibble
+
+EXTRA_CIA_OPTS += -fwarn-martian-invasions
+
+include $(TOP)/mk/target.mk
+</ProgramListing>
+<Para>
+The first two lines and last line are standard boilerplate. In between come
+the name of the library, other hslibs it needs, and whether it contains a C
+sub-library (in the <Filename>cbits</Filename> directory). Next comes a list
+of any subdirectories with Haskell source in, and finally, a list of any
+special compiler options that might be needed (see the building guide
+<!--<Xref LinkEnd="sec-makefile-arch">--> for the full mind-numbing range of
+implausibly useful things you can do here).
+</Para>
+</ListItem>
+</VarListEntry>
+
+<VarListEntry>
+<Term>A cbits <Filename>Makefile</Filename></Term>
+<ListItem>
+<Para>
+(In the <Filename>cbits</Filename> directory.) This should look like:
+</Para>
+<ProgramListing>
+# -----------------------------------------------------------------------------
+# $Id: newlib.sgml,v 1.3 2001/07/05 13:01:15 rrt Exp $
+#
+# (c) The Furballs 2005
+#
+
+TOP=../..
+include $(TOP)/mk/boilerplate.mk
+
+PACKAGE=lang
+IS_CBITS_LIB=YES
+
+ifeq "$(TARGETPLATFORM)" "i386-unknown-cygwin32"
+C_SRCS += .secret/Propaganda.c
+endif
+
+include $(TOP)/mk/target.mk
+</ProgramListing>
+<Para>
+As before, the first two lines and last lines are standard boilerplate to
+plumb in the rest of the build system. The setting of
+<Constant>PACKAGE</Constant> should be the same as for the parent directory,
+and <Constant>IS_CBITS_LIB</Constant> should be set to
+<Literal>YES</Literal>; after that come any special settings.
+</Para>
+</ListItem>
+</VarListEntry>
+
+</VariableList>
+</Para>
+
+</Sect1>
+
+<Sect1 id="sec-adddoc"><Title>How to add documentation for a library</Title>
+
+<Para> Each library's directory should contain a <Filename>doc</Filename>
+subdirectory. The main documentation file should be called
+<Filename>lib.sgml</Filename> where <Filename>lib</Filename> is the name of
+the library directory. </Para>
+
+<Para> To add documentation for a library to the main library manual, some
+new lines must be spliced into the top-level file
+<Filename>hslibs/doc/hslibs.sgml</Filename>. First, the library directory
+needs a line in the list of directories at the top of the file, of the form
+</Para>
+
+<ProgramListing>
+&lt;!ENTITY text SYSTEM "../text/doc/lib.sgml" &gt;
+</ProgramListing>
+
+<Para> Next, if the documentation for the library is split up over several
+files, a new section needs to be added to the bottom of the DTD declaration
+of <Filename>hslibs.sgml</Filename>, along the lines of </Para>
+
+<ProgramListing>
+&lt;!-- lib --&gt;
+        &lt;!ENTITY sub1            SYSTEM "../lib/doc/sub1.sgml"&gt;
+        &lt;!ENTITY sub2            SYSTEM "../lib/doc/sub2.sgml"&gt;
+        ...
+</ProgramListing>
+
+<Para> Finally, the library needs to be referenced by its entity name in the
+body of <Filename>hslibs.sgml</Filename>, as <Literal>&amp;lib</Literal>.
+</Para>
+
+</Sect1>
+
+
+<Sect1><Title>A template for library documentation</Title>
+
+<Para> At the moment, there is no standard form for libraries'
+documentation. The only requirement is that each should be a chapter: that
+is, the main file <Filename>lib.sgml</Filename> should not have a DTD line
+at the top, but start with <SGMLTag class="starttag">Chapter</SGMLTag> and
+end with <SGMLTag class="endtag">Chapter</SGMLTag>. </Para>
+
+</Sect1>
+
+</Article>

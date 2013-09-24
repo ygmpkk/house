@@ -1,0 +1,25 @@
+#include "config.h"
+
+Package {
+	name		= "win32",
+#ifdef INSTALLING
+	import_dirs	= [ "$libdir/hslibs-imports/win32" ],
+#else
+	import_dirs	= [ "$libdir/hslibs/win32" ],
+#endif
+	source_dirs	= [],
+#ifdef INSTALLING
+	library_dirs	= [ "$libdir" ],
+#else
+	library_dirs	= [ "$libdir/hslibs/win32" ],
+#endif
+	hs_libraries	= [ "HSwin321", "HSwin322" ],
+	extra_libraries	= [ "user32",  "gdi32", "winmm", 
+                               "kernel32", "advapi32" ],
+	include_dirs	= [],
+	c_includes	= [],
+	package_deps	= [ "haskell98", "lang" ],
+	extra_ghc_opts	= [],
+	extra_cc_opts	= [],
+	extra_ld_opts	= []
+}

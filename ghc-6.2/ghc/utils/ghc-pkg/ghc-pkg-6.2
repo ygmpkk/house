@@ -1,0 +1,5 @@
+#!/bin/sh
+GHCPKGBIN="/usr/local/lib/ghc-6.2/ghc-pkg.bin";
+PKGCONFOPT="-f /usr/local/lib/ghc-6.2/package.conf";
+# Mini-driver for ghc-pkg
+exec $GHCPKGBIN $PKGCONFOPT ${1+"$@"}

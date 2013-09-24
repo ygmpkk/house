@@ -1,0 +1,5 @@
+# DO NOT DELETE: Beginning of C dependencies
+lndir.o: lndir.c
+lndir.o: lndir-Xos.h
+lndir.o: lndir-Xosdefs.h
+# DO NOT DELETE: End of C dependencies

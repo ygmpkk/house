@@ -1,0 +1,65 @@
+<chapter id="hslibs-intro">
+  <title>Introduction</title>
+
+  <para>Previous versions of GHC (versions 5.02 and older) came with a
+  set of libraries called the <literal>hslibs</literal>, also known as
+  the Hugs-GHC libraries.  These libraries are being phased out in
+  favour of the new hierarchical libraries, but for the time being we
+  still provide <literal>hslibs</literal> for backwards
+  compatibility.</para>
+
+  <para>The status of each module in <literal>hslibs</literal> can be
+  considered to have three possible values:</para>
+
+  <variablelist>
+    <varlistentry>
+      <term>Moved</term>
+      <listitem>
+	<para>The module has moved to the hierarchical libraries, and
+	its documentation (in this document) will report its new
+	location.</para>
+      </listitem>
+    </varlistentry>
+    
+    <varlistentry>
+      <term>Not moved</term>
+      <listitem>
+	<para>The module is waiting to be moved to the new
+	hierarchical libraries, but it hasn't moved yet.  Please
+	continue to use it from its current <literal>hslibs</literal>
+	package for the time being.  The documentation for the module
+	(if it had any) is still in place in this document.</para>
+      </listitem>
+    </varlistentry>
+    
+    <varlistentry>
+      <term>Deprecated</term>
+      <listitem>
+	<para>The module is deprecated and should not be used.  A
+	deprecated module will be indicated as such in its
+	documentation, along with an suggested alternative API.</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+
+  <sect1 id="sec-library-usage">
+    <title>Usage<indexterm><primary>libraries,
+	  using</primary></indexterm></title>
+    
+    <para>If you're using hslibs with GHC[i], then you need to add
+      <option>-package <replaceable>p</replaceable></option> to the
+      command line for each package from which you're using a
+      module. See the <ulink
+      url="../users_guide/packages.html">section on packages in the
+      User's Guide</ulink> for an explanation of packages.</para>
+    
+  </sect1>
+  
+</chapter>
+
+<!-- Emacs stuff:
+     ;;; Local Variables: ***
+     ;;; mode: sgml ***
+     ;;; sgml-parent-document: ("hslibs.sgml" "book" "chapter" "chapter") ***
+     ;;; End: ***
+ -->

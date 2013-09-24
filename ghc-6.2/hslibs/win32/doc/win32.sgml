@@ -1,0 +1,7 @@
+<Chapter id="sec-win32"><Title>The Win32 package</Title>
+
+<Para>The win32 package is a thin and incomplete veneer over the Win32
+API. Look at the source code to see what is available; the usage
+should be obvious from the Microsoft's C API documentation.</Para>
+
+</Chapter>

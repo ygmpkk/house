@@ -1,0 +1,14 @@
+This directory contains 3 Makefiles:
+
+Makefile
+
+  Use if you are building as part of a GHC build
+
+Makefile.hugs
+
+ Use if you are building for Hugs
+
+Makefile.ghc
+
+ Use if you are building for GHC but are not doing a full 
+ GHC library build/bootstrap.

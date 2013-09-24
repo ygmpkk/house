@@ -1,0 +1,5 @@
+# DO NOT DELETE: Beginning of Haskell dependencies
+Config.o : Config.hs
+Main.o : Main.hs
+Main.o : Config.hi
+# DO NOT DELETE: End of Haskell dependencies

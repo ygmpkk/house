@@ -1,0 +1,43 @@
+About the Haskell Object I/O library                   January 16 2001
+======================================================================
+The modules in this directory are the result of a feasibility study to
+port the Clean Object I/O library (1.2.1) to Haskell. Details of this 
+project can be found in the research paper [1].
+
+The directory structure is as follows:
+
+./CleanStdEnv: contains a number of modules to ease conversion from
+               Clean to Haskell.
+./Examples:    contains example programs, makefiles are included,
+               follow instructions in 'About these examples.txt'
+./ObjectIO:    contains the modules of the OS independent layer of
+               the Object I/O library.
+./OSWindows:   contains the modules of the OS dependent layer of the
+               Object I/O library.
+./OSWindows/Windows_C_12:
+               contains the original C modules that are identical for
+               Clean and Haskell. 
+
+
+Goal of this project
+====================
+The goal of this project is to provide a Haskell GUI library that is
+equivalent (modulo monads vs. world-as-value) to the Clean Object I/O 
+library. The Clean Object I/O library is a fairly stable, well developed
+GUI library for Clean for which many interesting applications have been
+written (such as the CleanIDE). 
+
+
+Contact
+=======
+If people are interested in continuing this project, they can
+contact Simon Peyton Jones (simonpj@microsoft.com) or Peter Achten 
+(peter88@cs.kun.nl). 
+
+
+References
+==========
+[1] Achten, P. and Peyton Jones, S. Porting the Clean Object I/O Library 
+to Haskell, to appear in the Proceedings of the 12th International
+Workshop on Implementation of Functional Languages, Aachen, Germany,
+2000, Selected Papers. 

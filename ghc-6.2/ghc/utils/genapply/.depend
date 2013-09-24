@@ -1,0 +1,3 @@
+# DO NOT DELETE: Beginning of Haskell dependencies
+GenApply.o : GenApply.hs
+# DO NOT DELETE: End of Haskell dependencies

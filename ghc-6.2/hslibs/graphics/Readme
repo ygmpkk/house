@@ -1,0 +1,34 @@
+We are pleased to announce a new release of the Hugs Graphics Library.
+The Hugs Graphics Library gives the programmer access to the most
+interesting and portable parts of the Win32 and X11 library. The
+library is distributed as open source and is suitable for use in
+teaching and applications.
+
+This version supports:
+
+  Filled and unfilled 2-dimensional objects (text, lines, polygons, ellipses).
+  Bitmaps (Win32 version only, for now).
+  Control over text alignment, fonts, color.
+  Simple input events (keyboard, mouse, window resize) to support reactivity.
+  Timers and double-buffering to support simple animation.
+  Use of concurrency to avoid the usual inversion of the code associated 
+   with event-loop programming.
+  Multiple windows may be handled at one time.
+  
+To keep the library simple and portable, the library makes no attempt to 
+support:
+  
+  User interface widgets (menus, toolbars, dialog boxes, etc.)
+  Palette manipulation and other advanced features.
+  Many kinds of input event.
+
+The library can be downloaded from: http://www.haskell.org/graphics/.
+Installation instructions are in graphics-@VERSION@/Install.
+Bug reports should be sent to HGL@reid-consulting-uk.ltd.uk
+
+Enjoy!
+
+--
+Alastair Reid   
+alastair@reid-consulting-uk.ltd.uk  
+http://www.reid-consulting-uk.ltd.uk/alastair/

@@ -1,0 +1,7 @@
+# DO NOT DELETE: Beginning of C dependencies
+GHC/Unicode_hsc.o: GHC/Unicode_hsc.c
+System/CPUTime_hsc.o: System/CPUTime_hsc.c
+System/Posix/Signals_hsc.o: System/Posix/Signals_hsc.c
+System/Time_hsc.o: System/Time_hsc.c
+Text/Regex/Posix_hsc.o: Text/Regex/Posix_hsc.c
+# DO NOT DELETE: End of C dependencies

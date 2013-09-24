@@ -1,0 +1,218 @@
+interface Main where {
+
+{-# NEED #-}
+instance Prelude.Bounded IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Fractional (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Num (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Real (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.RealFrac (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Enum IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Enum (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Read IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Read a,Prelude.Integral a) => Prelude.Read (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Ord IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Ord (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Show Pretty.Doc;
+
+{-# NEED #-}
+instance Prelude.Show IO.Handle;
+
+{-# NEED #-}
+instance Prelude.Show IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Show (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Show XmlLex.Posn;
+
+{-# NEED #-}
+instance Prelude.Show XmlLex.TokenT;
+
+{-# NEED #-}
+instance Prelude.Show XmlLex.Special;
+
+{-# NEED #-}
+instance Prelude.Show XmlLex.Section;
+
+{-# NEED #-}
+instance (Prelude.Show a) => Prelude.Show (Xml2Haskell.Defaultable a);
+
+{-# NEED #-}
+instance Prelude.Show DTD_norback.Two;
+
+{-# NEED #-}
+instance Prelude.Show DTD_norback.One;
+
+{-# NEED #-}
+instance Prelude.Show DTD_norback.Test_;
+
+{-# NEED #-}
+instance Prelude.Show DTD_norback.Test;
+
+{-# NEED #-}
+instance Prelude.Eq IO.Handle;
+
+{-# NEED #-}
+instance Prelude.Eq IO.IOMode;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Eq (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.AttValue;
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.Reference;
+
+{-# NEED #-}
+instance Prelude.Eq XmlLex.Where;
+
+{-# NEED #-}
+instance Prelude.Eq XmlLex.Posn;
+
+{-# NEED #-}
+instance Prelude.Eq XmlLex.TokenT;
+
+{-# NEED #-}
+instance Prelude.Eq XmlLex.Special;
+
+{-# NEED #-}
+instance Prelude.Eq XmlLex.Section;
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.ElemTag;
+
+{-# NEED #-}
+instance (Prelude.Eq a) => Prelude.Eq (Xml2Haskell.Defaultable a);
+
+{-# NEED #-}
+instance Prelude.Eq DTD_norback.Two;
+
+{-# NEED #-}
+instance Prelude.Eq DTD_norback.One;
+
+{-# NEED #-}
+instance Prelude.Eq DTD_norback.Test_;
+
+{-# NEED #-}
+instance Prelude.Eq DTD_norback.Test;
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b) => Xml2Haskell.XmlContent (a,b);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b,Xml2Haskell.XmlContent c) => Xml2Haskell.XmlContent (a,b,c);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b) => Xml2Haskell.XmlContent (Xml2Haskell.OneOf2 a b);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b,Xml2Haskell.XmlContent c) => Xml2Haskell.XmlContent (Xml2Haskell.OneOf3 a b c);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b,Xml2Haskell.XmlContent c,Xml2Haskell.XmlContent d) => Xml2Haskell.XmlContent (Xml2Haskell.OneOf4 a b c d);
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent DTD_norback.Two;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent DTD_norback.One;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent DTD_norback.Test_;
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a) => Xml2Haskell.XmlContent [a];
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent DTD_norback.Test;
+interface Pretty
+{-# NEED Doc #-}
+data Doc;
+interface IO
+{-# NEED Handle #-}
+newtype {-#  #-} Handle;
+
+{-# NEED IOMode #-}
+data IOMode;
+interface Ratio
+{-# NEED Ratio #-}
+data (Prelude.Integral a) => Ratio a;
+interface XmlTypes
+{-# NEED AttValue #-}
+data AttValue;
+
+{-# NEED Reference #-}
+data Reference;
+interface XmlLex
+{-# NEED Where #-}
+data Where;
+
+{-# NEED Posn #-}
+data Posn;
+
+{-# NEED TokenT #-}
+data TokenT;
+
+{-# NEED Special #-}
+data Special;
+
+{-# NEED Section #-}
+data Section;
+interface XmlTypes
+{-# NEED ElemTag #-}
+data ElemTag;
+interface Xml2Haskell
+{-# NEED Defaultable #-}
+data Defaultable a;
+
+{-# NEED OneOf2 #-}
+data OneOf2 a b;
+
+{-# NEED OneOf3 #-}
+data OneOf3 a b c;
+
+{-# NEED OneOf4 #-}
+data OneOf4 a b c d;
+
+{-# NEED XmlContent #-}
+class XmlContent a;
+interface DTD_norback
+{-# NEED Test #-}
+newtype {-#  #-} Test;
+
+{-# NEED Test_ #-}
+data Test_;
+
+{-# NEED Two #-}
+data Two;
+
+{-# NEED One #-}
+data One;
+interface ! Main
+{-# NEED main #-}
+main{-# 0 #-}::(Prelude.IO ());
+}

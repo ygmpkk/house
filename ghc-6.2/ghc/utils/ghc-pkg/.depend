@@ -1,0 +1,8 @@
+# DO NOT DELETE: Beginning of Haskell dependencies
+Main.o : Main.hs
+Main.o : ./ParsePkgConfLite.hi
+Main.o : ./Package.hi
+Package.o : Package.hs
+ParsePkgConfLite.o : ParsePkgConfLite.hs
+ParsePkgConfLite.o : Package.hi
+# DO NOT DELETE: End of Haskell dependencies

@@ -1,0 +1,113 @@
+ToDo:
+o Deallocation
+  o Use garbage collector as much as possible.
+  o Check everything else
+o Interface
+  o Expose drawDelta functions??
+o Fonts
+  o since there is no way to find out the default font, we use
+    "9x15".  But what if "9x15" isn't available?
+  o do something about the angle argument
+  o implement Style properly
+o Timers
+  o turn timer off when we get a VisibilityChange{state=FullyObscured}
+    (or, simpler, Unmap) event - maybe
+  o consider providing 1st class timers too
+o Bitmaps
+o Errors
+  o catch Xlib errors
+    expected to be tricky because Xlib uses callbacks to implement them
+    and callbacks are bad places from which to raise exceptions.
+o Module structure
+  o Move everything into GraphicsCore and GraphicsCoreUtils
+    - leave the names GraphicsUtils and Graphics for users to write themselves
+    - don't reveal any deeper structure than that
+  o Rename docs to match
+o Documentation
+  o eliminate all the ToDos
+  o Time performance difference from optimising withBrush and friends
+  o write a Perl script to generate the quick reference appendix for me
+    ./gendoc GraphicsColor.hs GraphicsEvent.hs GraphicsFont.hs GraphicsPicture.hs GraphicsRegion.hs GraphicsUtils.hs
+  o update/write documentation
+  o Performance tricks we play:
+    o use of backing store to reduce exposure event rate
+    o use of bitgravity to avoid exposure events on window shrink
+    o region drawing times seem to be acceptable - but it's hard to be sure
+  o Differences from Win32
+    o Fonts
+      o Font descriptions are usually not portable
+  	but we could try to improve the mapping and supply an X specific 
+        function for using X Logical Font Descriptors
+    o In Win32, the border of a filled object is drawn using the paint color
+      and the center is drawn using the brush color.
+      In X, the border and center are both drawn with the brush color.
+o Testing
+  o setup a test suite
+    o at least one test for every function!
+    o since they mostly have to be checked visually:
+      1) Use symmetry, physical contact, etc. to make errors easy to spot.
+      2) Include a description of correct behaviour on each window
+      3) Include a description of how to close the window.
+      4) Put many tests on a single large window (for purely graphic
+         programs).
+  o check animations for space leaks
+  o test against Paul's code
+  o compare with Win32 behaviour (buy the Petzoldt book)
+  o check what error polygon [] and others produce
+  o space leak in Ch3.main3' (do lots of resizes to make it happen)
+  o invalid window parameter in animations
+    (drawing too soon??)
+  o font error messages
+o Misc
+  o make choice of background colour explicit
+  o remove/comment out all prints, putStrs and undefineds from library
+    grep undefined *.hs
+    grep print *.hs
+    grep putStrLn *.hs
+  o use GC to release most objects
+  o Provide access to the X11 functions that convert color names to
+    rgb values.  (Does Win32 provide this too?)
+o Test Status returned from Xlib functions - it is an error code
+
+Using Paul's code
+~~~~~~~~~~~~~~~~~
+
+Added some fillin modules:
+  Win32Misc.hs
+  GraphicsWindows.hs
+SOEGraphics added:
+  getEvent = getWindowEvent
+  drawInWindowNow = drawInWindow
+
+Performance:
+- Is Animation.main7 too slow?
+- redraw rate for (test $ paddleball 0.4) is about 4 fps
+- is Robot.main meant to start so slowly?
+
+Behaviour:
+- is Robot.main meant to miss all the treasure?
+- paddleball - corners of box don't quite join up
+
+
+
+Some modules just won't load - I'm assuming they're not meant to.
+
+ERROR "Hof.lhs" (line 64): Type error in explicitly typed binding
+*** Term           : appendr
+*** Type           : [[b]] -> [b]
+*** Does not match : [a] -> [a] -> [a]
+
+ERROR "IOProc.lhs" (line 92): Syntax error in input (unexpected keyword "module")
+ERROR "Induction.lhs" (line 203): "^" multiply defined
+ERROR "Intro.lhs" (line 52): Syntax error in input (unexpected character literal)
+ERROR "List-tour.lhs" (line 99): Syntax error in input (unexpected `|')
+ERROR "Monads.lhs" (line 39): Syntax error in input (unexpected token)
+ERROR "Patterns.lhs" (line 27): "take" multiply defined
+ERROR "Perimeter.lhs": Tycon "Bool" imported from "Prelude" already defined in module "Perimeter"
+ERROR "Poly.lhs" (line 117): Syntax error in expression (unexpected symbol "??")
+ERROR "Poly.lhs" (line 70): Undefined type constructor "Color"
+ERROR "Poly.lhs" (line 196): "reverse" multiply defined
+ERROR "Poly.lhs" (line 152): "listProd" multiply defined
+ERROR "Poly.lhs" (line 31): "putCharList" multiply defined
+ERROR "Poly.lhs" (line 27): "transList" multiply defined
+ERROR "Qualified-types.lhs" (line 53): Repeated definition of class "Eq"

@@ -1,0 +1,4 @@
+An interface to the GNU readline library.  More information on
+readline can be found at
+<http://cnswww.cns.cwru.edu/~chet/readline/rltop.html>.
+

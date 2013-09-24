@@ -1,0 +1,7 @@
+module MachMisc where
+
+data Instr
+
+fixedHdrSize :: GHC.Base.Int
+fmtAsmLbl :: GHC.Base.String -> GHC.Base.String
+underscorePrefix :: GHC.Base.Bool

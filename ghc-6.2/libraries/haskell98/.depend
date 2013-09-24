@@ -1,0 +1,33 @@
+# DO NOT DELETE: Beginning of Haskell dependencies
+Array.o : Array.hs
+Array.o : ./Ix.hi
+Bits.o : Bits.hs
+CError.o : CError.hs
+CForeign.o : CForeign.hs
+CPUTime.o : CPUTime.hs
+CString.o : CString.hs
+CTypes.o : CTypes.hs
+Char.o : Char.hs
+Complex.o : Complex.hs
+Directory.o : Directory.hs
+ForeignPtr.o : ForeignPtr.hs
+IO.o : IO.hs
+Int.o : Int.hs
+Ix.o : Ix.hs
+List.o : List.hs
+Locale.o : Locale.hs
+MarshalAlloc.o : MarshalAlloc.hs
+MarshalArray.o : MarshalArray.hs
+MarshalError.o : MarshalError.hs
+MarshalUtils.o : MarshalUtils.hs
+Maybe.o : Maybe.hs
+Monad.o : Monad.hs
+Ptr.o : Ptr.hs
+Random.o : Random.hs
+Ratio.o : Ratio.hs
+StablePtr.o : StablePtr.hs
+Storable.o : Storable.hs
+System.o : System.hs
+Time.o : Time.hs
+Word.o : Word.hs
+# DO NOT DELETE: End of Haskell dependencies

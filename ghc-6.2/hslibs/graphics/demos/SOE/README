@@ -1,0 +1,102 @@
+This files in this directory are copyright (2000 AD) Paul Hudak and
+were automatically extracted from Paul Hudak's book:
+
+  The Haskell School of Expression:
+  Learning Functional Programming through Multimedia
+  Cambridge University Press, New York, 2000
+  Paperback ISBN: 0521644089
+  Hardback  ISBN: 0521643384
+
+The files correspond to individual chapters or appendices in the book
+as follows.  (Files in the 'book' subdirectory are not valid Haskell but
+are included for completeness.)
+
+  Chapter File                 Title
+
+  1       book/Intro.lhs       Problem Solving, Programming and Calculation
+  2       book/Shape.lhs       A Module of Shapes: Part I
+  3       SimpleGraphics.lhs   Simple Graphics
+  4       Draw.lhs             Shapes II: Drawing Shapes
+  5       book/Poly.lhs        Polymorphic and Higher-Order Functions
+  6       book/Perimeter.lhs   Shapes III: Perimeters of Shapes
+  7       Trees.lhs            Trees
+  8       Region.lhs           Region
+  9       book/Hof.lhs         More About Higher-Order Functions 
+  10      Picture.lhs          Drawing Regions
+  11      book/Induction.lhs   Proof by Induction
+  12      book/Qualified-types.lhs
+                               Qualified Types
+  13      Animation.lhs        A Module of Simple Animations
+  14      Streams.lhs          Programming With Streams
+  15      Fal.lhs              A Module of Reactive Animations
+  16      book/IOProc.lhs      Communicating with the Outside World
+  17      Reactimate.lhs       Rendering Reactive Animations
+  18      book/Monads.lhs      Higher-Order Types
+  19      Robot.lhs            An Imperative Robot Language
+  20      Music.lhs            Functional Music Composition
+  21      Perform.lhs          Interpreting Functional Music
+  22      Midi.lhs             From Performance to MIDI
+                                 Requires the Haskore library available from
+                                 http://haskell.org/haskore/
+  23      book/List-tour.lhs   A Tour of the PreludeList Module
+  24      book/Class-tour.lhs  A Tour of Haskell's Standard Type Classes
+  A       book/Bitans.lhs      Built-in Types Are Not Special
+  B       book/Pattern.lhs     Pattern-Matching Details
+          Snowflake.lhs        <not part of book>
+
+These files contain the following demonstrations.  You may need to
+read the book to understand how the later examples work.
+
+  module SimpleGraphics
+    All programs terminate when you hit any key.
+    main0     - Hello World
+    main1     - Hello World (written in different style)
+    main2     - A hollow blue rectangle and a solid red ellipse
+    main3     - Sierpinski's triangle (blue)
+    main3book - ditto but with white background 
+                (The default background is black on Win32)
+  module Draw
+    All programs terminate when you hit any key.
+    main0     - A solid red rectangle partly obscured by a solid blue ellipse
+    main1     - 4 different filled shapes in 4 different colors
+    main1book - ditto but with white background
+    main2book - A Bull's eye
+  module Picture
+    Pressing a key terminates any invocation of draw
+    draw "P" p1   - A red rectangle
+    draw "P" p2   - A blue ellipse
+    draw "P" p3   - A green rectangle
+    draw "P" p4   - A yellow polygon
+    draw "P" pic1 - Intersections and unions of regions (all blue)
+    draw "P" pic2 - Unions of regions (all yellow)
+    draw "P" pic3 - Union of pic1 and pic3 (blue and yellow)
+    draw "P" pp1  - A red square
+    draw "P" pp2  - A blue square
+    draw "P" fc   - 5 red circles, all in a row
+    main          - 4 different filled shapes in 4 different colors 
+                    (not the same colors as Draw.main1).
+                    Clicking on any shape brings it to the top.
+                    Clicking elsewhere terminates program.
+    mainbook      - ditto but with white background and can only be closed
+                    by closing window (see code to understand why)
+  module Animation
+    All programs terminate when you close the window.
+    main1     - An ellipse which gets squished vertically then horizontally
+    main2     - A time counter
+    main3     - A yellow ball moving in a circle
+    main4     - A squishy red ellipse and a yellow ball moving in a circle
+    main5     - A red ball moving in a circle (written as a Behavior)
+    main6     - A flashing red/yellow ball  moving in a circle
+    main7     - Lots of flashing balls
+    main8     - 2 kaleidoscopes (close first window to see second kaleidoscope)
+  module Fal
+    sim1      - A bouncing ball
+    sim2      - A snapshot of a paddleball game
+    test (paddleball 2)
+              - A real-life paddleball game
+  module Robot
+    main      - Some coins and a robot that runs in a spiral
+                Press space to start robot, press space to close
+    main1     - Some coins in a box and a treasure hunting robot
+                Press space to start robot, press space to close
+    main1book - ditto

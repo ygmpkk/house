@@ -1,0 +1,18 @@
+#!/bin/sh
+HSC2HS_BINDIR="/local/home/hallgren/src/House/hOp-2004-06-09/ghc-6.2/ghc/utils/hsc2hs";
+HSC2HS_DIR="/local/home/hallgren/src/House/hOp-2004-06-09/ghc-6.2/ghc/utils/hsc2hs";
+HS_PROG="hsc2hs-bin";
+HSC2HS_EXTRA="--cc=gcc --ld=gcc --cflag=-D__GLASGOW_HASKELL__=602 -I/local/home/hallgren/src/House/hOp-2004-06-09/ghc-6.2/ghc/includes";
+
+tflag="--template=$HSC2HS_DIR/template-hsc.h"
+for arg do
+    case "$arg" in
+        -c*)    HSC2HS_EXTRA=;;
+        --cc=*) HSC2HS_EXTRA=;;
+	-t*)	tflag=;;
+	--template=*) tflag=;;
+        --)     break;;
+    esac
+done
+
+$HSC2HS_BINDIR/$HS_PROG $tflag $HSC2HS_EXTRA "$@" 

@@ -1,0 +1,87 @@
+Win32 Installation Instructions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following procedure is suggested for installation of the HGL on a
+Windows machine.
+
+  0) Choose a directory for the Graphics library to go in.
+
+     In the following, we'll assume c:\Hugs and we'll assume that Hugs
+     is installed in c:\Hugs\Hugs98
+
+  1) Unzip the Graphics and Win32 libraries.
+
+  2) Test the library
+
+     c:\Hugs98\Hugs98\runHugs -Pc:\Hugs98\win32;c:\Hugs98\graphics-@VERSION@\lib\win32; c:\Hugs98\graphics-@VERSION@/demos/HelloWorld.hs
+
+  3) Modify your path to include the Graphics and Win32 libraries.
+
+     This is normally done by starting Hugs and executing this command:
+
+       :set -Pc:\Hugs98\win32;c:\Hugs98\graphics-@VERSION@\lib\win32;
+
+
+Unix Installation Instructions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following procedure is suggested for installation of the HGL on a
+Unix machine.
+
+Short version:
+   
+     tar zxf graphics-@VERSION@.src.tar.gz
+     gmake -C graphics-@VERSION@/lib/x11 
+     runhugs -Pgraphics-@VERSION@/lib/x11: graphics-@VERSION@/demos/HelloWorld.hs
+     
+Long version:
+
+  0) Choose a directory for the library to go in.
+     In the following, we'll assume $HOME/local.
+
+     Check that these directories have appropriate permission settings.
+
+  1) Unpack the library
+
+       cd $HOME/local
+       tar zxf $HOME/graphics-@VERSION@.src.tar.gz
+
+  2) Build the StdDIS, X and Xlib libraries [Source distribution only]
+
+     If you have a tolerably up to date, normal Unix box, you can
+     probably just run
+
+          gmake -C graphics-@VERSION@/lib/x11 
+
+     If your X11 installation is not in /usr/X11R6, you can
+     override the default like so:
+
+          gmake -C graphics-@VERSION@/lib/x11 X_dir=/usr/local/X11R6
+
+     If that fails feel free to edit the Makefile and mail us
+     whatever works.
+
+  3) Make the documentation
+
+          gmake -C graphics-@VERSION@/doc dvi ps psgz
+
+     If you have latex2html installed, you can make an html version too:
+
+          gmake -C graphics-@VERSION@/doc html
+
+     [Of course, you can just download the documentation from the webpage]
+
+  4) Test the library
+
+       runhugs -Pgraphics-@VERSION@/lib/x11: graphics-@VERSION@/demos/HelloWorld.hs
+
+  5) Edit setting of HUGSFLAGS in .cshrc, .bashrc, etc to include
+
+       -P$HOME/local/graphics-@VERSION@/lib/x11:
+
+Enjoy,
+
+--
+Alastair Reid                 alastair@reid-consulting-uk.ltd.uk  
+Reid Consulting (UK) Limited  http://www.reid-consulting-uk.ltd.uk/alastair/
+

@@ -1,0 +1,8 @@
+#!/bin/sh
+HERE="$(dirname "$0")"
+TOP="$HERE/../.."
+
+GHCPKGBIN="$TOP/utils/ghc-pkg/ghc-pkg.bin";
+PKGCONFOPT="-f $TOP/driver/package.conf.inplace";
+# Mini-driver for ghc-pkg
+exec $GHCPKGBIN $PKGCONFOPT ${1+"$@"}

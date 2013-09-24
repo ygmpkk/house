@@ -1,0 +1,7 @@
+module RnHiFiles where
+
+loadInterface
+	:: Outputable.SDoc
+	-> Module.ModuleName
+	-> TcRnTypes.WhereFrom
+	-> TcRnTypes.TcRn m HscTypes.ModIface

@@ -1,0 +1,18 @@
+#!/bin/sh
+HSC2HS_BINDIR="/usr/local/lib/ghc-6.2";
+HSC2HS_DIR="/usr/local/lib/ghc-6.2";
+HS_PROG="hsc2hs-bin";
+HSC2HS_EXTRA="--cc=/usr/local/bin/ghc-6.2";
+
+tflag="--template=$HSC2HS_DIR/template-hsc.h"
+for arg do
+    case "$arg" in
+        -c*)    HSC2HS_EXTRA=;;
+        --cc=*) HSC2HS_EXTRA=;;
+	-t*)	tflag=;;
+	--template=*) tflag=;;
+        --)     break;;
+    esac
+done
+
+$HSC2HS_BINDIR/$HS_PROG $tflag $HSC2HS_EXTRA "$@" 

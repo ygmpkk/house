@@ -1,0 +1,4 @@
+module DsExpr where
+
+dsExpr :: TcHsSyn.TypecheckedHsExpr -> DsMonad.DsM CoreSyn.CoreExpr
+dsLet  :: TcHsSyn.TypecheckedHsBinds -> CoreSyn.CoreExpr -> DsMonad.DsM CoreSyn.CoreExpr

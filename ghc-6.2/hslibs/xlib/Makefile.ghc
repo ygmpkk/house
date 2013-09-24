@@ -1,0 +1,50 @@
+default: objs
+
+GREENCARD=greencard
+GCDIR		= $(HOME)/local/greencard
+X_LIBS=-L/usr/X11R6/lib
+
+HC = ghc
+GCLIBDIR        = $(GCDIR)/lib/ghc
+
+GC_SRCS            = $(wildcard *.gc)
+HS_SRCS         = $(wildcard *.hs) $(addsuffix .hs,  $(basename $(GC_SRCS)))
+OBJS            = $(addsuffix .o,  $(basename $(HS_SRCS)))
+
+SRC_HC_OPTS     += -fglasgow-exts -fvia-C 
+SRC_HC_OPTS     += -syslib data
+SRC_HC_OPTS     += -syslib text
+
+# SRC_HC_OPTS    += -monly-3-regs
+# SRC_HC_OPTS    += -package greencard
+SRC_HC_OPTS    += $(X_CFLAGS)
+
+# compiling via the ghc target has historically been the most reliable 
+# approach
+#SRC_GC_OPTS    += --target ghc 
+SRC_GC_OPTS    += --target ffi
+
+
+SRC_GC_OPTS    += --include-dir $(GCLIBDIR)
+
+EXTRA_LD_OPTS += $(X_LIBS) -lX11
+
+.SUFFIXES	: .gc .hs .o .hi .lhs
+
+%.hs : %.gc
+	$(GREENCARD) $(SRC_GC_OPTS) -f$*_stub_ffi.c -fcbits/auxiliaries.c -f$(X_LIBS) -f-lX11 -f-lc $< -o $@
+%.o	        : %.hs
+		$(HC) $(SRC_HC_OPTS) $(EXTRA_HC_OPTS) -c $< -o $@
+%.o	        : %.lhs
+		$(HC) $(SRC_HC_OPTS) $(EXTRA_HC_OPTS) -c $< -o $@
+%.hi		: %.o
+		@:
+
+# X.hs : Xlib_StdDIS.hi
+# Xlib.hs : X.hi
+
+objs: $(OBJS)
+
+gc_hs: $(HS_SRCS)
+
+.precious: $(HS_SRCS) 

@@ -1,0 +1,109 @@
+interface DTD_norback where {
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Fractional (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Num (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Real (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.RealFrac (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Enum (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Read a,Prelude.Integral a) => Prelude.Read (Ratio.Ratio a);
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Ord (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Show Two;
+
+{-# NEED #-}
+instance Prelude.Show One;
+
+{-# NEED #-}
+instance Prelude.Show Test_;
+
+{-# NEED #-}
+instance Prelude.Show Test;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Show (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Eq Two;
+
+{-# NEED #-}
+instance Prelude.Eq One;
+
+{-# NEED #-}
+instance Prelude.Eq Test_;
+
+{-# NEED #-}
+instance Prelude.Eq Test;
+
+{-# NEED #-}
+instance (Prelude.Integral a) => Prelude.Eq (Ratio.Ratio a);
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.AttValue;
+
+{-# NEED #-}
+instance Prelude.Eq XmlTypes.Reference;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Two;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent One;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Test_;
+
+{-# NEED #-}
+instance Xml2Haskell.XmlContent Test;
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b,Xml2Haskell.XmlContent c) => Xml2Haskell.XmlContent (a,b,c);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a,Xml2Haskell.XmlContent b) => Xml2Haskell.XmlContent (a,b);
+
+{-# NEED #-}
+instance (Xml2Haskell.XmlContent a) => Xml2Haskell.XmlContent [a];
+interface Ratio
+{-# NEED Ratio #-}
+data (Prelude.Integral a) => Ratio a;
+interface XmlTypes
+{-# NEED AttValue #-}
+data AttValue;
+
+{-# NEED Reference #-}
+data Reference;
+interface Xml2Haskell
+{-# NEED XmlContent #-}
+class XmlContent a;
+interface ! DTD_norback
+{-# NEED {Test Test} #-}
+newtype {-#  #-} Test
+  = Test [Test_];
+
+{-# NEED {Test_ Test_One Test_Two} #-}
+data Test_
+  = Test_One One
+  | Test_Two Two;
+
+{-# NEED {Two Two} #-}
+data Two
+  = Two ;
+
+{-# NEED {One One} #-}
+data One
+  = One ;
+}

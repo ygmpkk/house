@@ -1,0 +1,41 @@
+#! /usr/bin/perl
+
+# Extracts interface section of Haskell files as LaTeX source code.
+# That is, all lines between -- Interface and -- Implementation
+# except for long lines of comments and empty lines.
+# Haskell comments of the form --elsewhere: <something> are
+# output as <something> (useful is something logically belongs here but
+# is defined elsewhere.)
+#
+# This isn't much of a documentation convention (when compared with the likes
+# of Java, for example) but it's better than nothing.
+
+foreach $f (@ARGV) {
+    $f_base = substr($f,0,-3); # assume all .hs files :-(
+    open(FILE, $f) || die "Can't find $f\n";
+    while (<FILE>) {
+       while (<FILE>) {
+   	   last if /^-- Interface/;
+       }
+       if (/^-- Interface/) {
+   	   print <<EOF;
+\\modName{$f_base}
+
+\\begin{verbatim}
+EOF
+    	   while (<FILE>) {
+    	   	last if /^-- Implementation/;
+    	   	next if /^----/; 
+    	   	next if /^\w*$/;
+    	   	$_ = $' if /^--elsewhere: /;
+    	   	print "> $_";
+    	   }
+    	   print <<EOF;
+\\end{verbatim}
+
+EOF
+        }
+    }
+    close(FILE);
+}
+	    

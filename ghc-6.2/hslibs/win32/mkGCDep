@@ -1,0 +1,37 @@
+foreach $file (@ARGV) {
+	&process($file);
+}
+
+sub process {
+	local($filename,$input) = @_;
+	$input++;
+	unless (open($input,$filename)) {
+		print STDERR "Can't open $filename: $!\n";
+		return;
+	}
+	$base = $filename;
+	$base =~ s/\.gc//;
+	$base =~ s#gc-src/##;
+
+	# Depend on itself.
+	print "${base}_stub_ffi.c: $filename\n";
+	print "${base}_stub_ffi.h: $filename\n";
+	print "${base}.hs: $filename\n";
+	print "${base}.dll: ${base}.hs ${base}_stub_ffi.c ${base}_stub_ffi.h\n";
+	while (<$input>) {
+		if (/^import\s+(\w*)/) {
+			local $module = "gc-src/$1.gc";
+			local $dll = "$1.dll";
+			local $obj = "$1.o";
+			if (-f $module) {
+				print "${base}_stub_ffi.c: $module\n";
+				print "${base}_stub_ffi.h: $module\n";
+				print "${base}.dll: $dll\n";
+			}
+		} elsif (/%#include\s+"(.*)"/) {
+			print "$(base).dll:	$1\n";
+			print "$(base).o:	$1\n";
+		}
+	}
+	close $input;
+}

@@ -1,0 +1,5 @@
+#!/bin/sh
+GHCBIN="/local/home/hallgren/src/House/hOp-2004-06-09/ghc-6.2/ghc/compiler/ghc-6.2";
+TOPDIROPT="-B/local/home/hallgren/src/House/hOp-2004-06-09/ghc-6.2";
+# Mini-driver for GHCi
+exec $GHCBIN $TOPDIROPT --interactive ${1+"$@"}
